@@ -48,7 +48,7 @@ import { Request } from './requests/entities/request.entity';
           TeacherProfile,
           Request,
         ],
-        // synchronize: configService.get('NODE_ENV') === 'development', // Only in development
+        synchronize: configService.get('NODE_ENV') === 'development', // Only in development
         logging: configService.get('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],

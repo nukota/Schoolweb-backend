@@ -49,12 +49,12 @@ export class AuthService {
 
     // Hash password
     const saltRounds = 10;
-    const password_hash = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create user
     const user = this.userRepository.create({
       full_name,
-      password_hash,
+      password: hashedPassword,
       user_type,
     });
 
@@ -111,7 +111,7 @@ export class AuthService {
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }

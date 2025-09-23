@@ -142,7 +142,7 @@ export class TeacherProfileDTO {
   user_id: number;
   full_name: string;
   dob?: string; // ISO date string
-  password_hash: string;
+  password: string;
   avatar_url?: string;
   department: Department;
   teacher_id: number;
