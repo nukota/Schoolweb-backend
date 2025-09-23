@@ -23,25 +23,6 @@ export class PieChartDataDTO {
   value: number;
 }
 
-// Common class info DTO
-export class ClassInfoDTO {
-  id: number;
-  class_name: string;
-  class_code: string;
-  department: string;
-  room?: string;
-  schedule?: string;
-}
-
-// Common user info DTO
-export class UserInfoDTO {
-  id: number;
-  full_name: string;
-  user_type: UserType;
-  department: Department;
-  avatar_url?: string;
-}
-
 export class UpcomingClassDTO {
   class_name: string;
   class_code: string;

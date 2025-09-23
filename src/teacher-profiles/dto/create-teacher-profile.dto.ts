@@ -1,4 +1,11 @@
-import { IsNumber, IsString, IsOptional, IsDateString } from 'class-validator';
+import {
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsDateString,
+  IsEnum,
+} from 'class-validator';
+import { Department } from 'src/common/enums';
 
 export class CreateTeacherProfileDto {
   @IsNumber()
@@ -8,8 +15,19 @@ export class CreateTeacherProfileDto {
   teacher_id: number;
 
   @IsOptional()
+  @IsDateString()
+  dob?: string;
+
+  @IsOptional()
   @IsString()
   position?: string;
+
+  @IsOptional()
+  @IsString()
+  avatar_url?: string;
+
+  @IsEnum(Department)
+  department: Department;
 
   @IsOptional()
   @IsDateString()

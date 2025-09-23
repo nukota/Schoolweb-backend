@@ -5,6 +5,7 @@ import {
   PieChartDataDTO,
 } from 'src/common/dto/common.dto';
 import {
+  ClassStatus,
   Department,
   EnrollmentStatus,
   GradeType,
@@ -29,12 +30,16 @@ export class StudentDashboardDTO {
 
 // DTO class for My Classes Page
 export class StudentClassDTO {
-  id: number;
+  class_id: number;
   class_name: string;
   class_code: string;
   teacher_name: string;
   department: string;
-  schedule: string;
+  start_date?: string;
+  end_date?: string;
+  day?: string;
+  start_time?: string;
+  end_time?: string;
   room: string;
   credits: number;
   requested_to_drop?: boolean;
@@ -47,7 +52,6 @@ export class StudentClassesDTO {
 
 //DTO class for Schedule Page
 export class StudentScheduleItemDTO {
-  id: number;
   department: Department;
   class_name: string;
   class_code: string;
@@ -62,34 +66,37 @@ export class StudentScheduleDTO {
   schedule: StudentScheduleItemDTO[];
 }
 
-// DTO classs for Registering Classes Page
+// DTO classes for Registering Classes Page
 export class RegisterClassDto {
-  id: number;
+  class_id: number;
   class_name: string;
   class_code: string;
   teacher_name: string;
   department: string;
-  schedule: string;
+  start_date?: string;
+  end_date?: string;
+  day?: string;
+  start_time?: string;
+  end_time?: string;
   room: string;
   credits: number;
   max_students: number;
   enrolled_students: number;
   description: string;
-  status: string;
-  enrolled: boolean;
+  status: ClassStatus;
 }
 
 export class RegistrationClassesDTO {
   available_classes: RegisterClassDto[];
 }
 
-// DTO classs for Academic Results
+// DTO classes for Academic Results
 export class ClassResultDTO {
   class_code: string;
   class_name: string;
   department: string;
   credits: number;
-  scores: number[]; // Array of 5 numbers: [assignment1, assignment2, midterm, final, average]
+  scores: number[]; // Array of 5 numbers: [coursework, lab, midterm, final, average]
   status: EnrollmentStatus;
   instructor: string;
 }
@@ -103,7 +110,7 @@ export class AcademicResultsDTO {
   semesters: SemesterDTO[];
 }
 
-// DTO classs for Registration History
+// DTO classes for Registration History
 export class RegistrationClassDTO {
   class_code: string;
   class_name: string;
@@ -121,4 +128,27 @@ export class RegistrationSemesterDTO {
 
 export class RegistrationHistoryDTO {
   semesters: RegistrationSemesterDTO[];
+}
+
+// DTO classes for Profile Page
+export class StudentProfileDTO {
+  user_id: number;
+  full_name: string;
+  dob?: string;
+  password_hash: string;
+  avatar_url?: string;
+  department: Department;
+  student_id: number;
+  phone?: string;
+  email?: string;
+  enrollment_year?: number;
+}
+
+export class UpdateStudentProfileDTO {
+  full_name?: string;
+  dob?: string;
+  password_hash?: string;
+  avatar_url?: string;
+  phone?: string;
+  email?: string;
 }

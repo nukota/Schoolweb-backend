@@ -7,7 +7,7 @@ import {
   OneToOne,
   Index,
 } from 'typeorm';
-import { UserType, Department } from '../../common/enums';
+import { UserType } from '../../common/enums';
 import { Class } from '../../classes/entities/class.entity';
 import { Enrollment } from '../../enrollments/entities/enrollment.entity';
 import { Request } from '../../requests/entities/request.entity';
@@ -26,9 +26,6 @@ export class User {
   @Column({ length: 255 })
   full_name: string;
 
-  @Column({ type: 'date', nullable: true })
-  dob?: Date;
-
   @Column({ length: 255 })
   password_hash: string;
 
@@ -38,17 +35,8 @@ export class User {
   })
   user_type: UserType;
 
-  @Column({ length: 500, nullable: true })
-  avatar_url?: string;
-
   @CreateDateColumn()
   created_at: Date;
-
-  @Column({
-    type: 'enum',
-    enum: Department,
-  })
-  department: Department;
 
   // Relations
   @OneToMany(() => Class, (classEntity) => classEntity.teacher)

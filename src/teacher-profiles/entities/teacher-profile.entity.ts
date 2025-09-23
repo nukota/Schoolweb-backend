@@ -6,6 +6,7 @@ import {
   OneToOne,
   JoinColumn,
 } from 'typeorm';
+import { Department } from '../../common/enums';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('teacher_profiles')
@@ -18,6 +19,21 @@ export class TeacherProfile {
 
   @Column({ type: 'text', nullable: true })
   position?: string;
+
+  @Column({ length: 255, unique: true })
+  email: string;
+
+  @Column({ type: 'date', nullable: true })
+  dob?: Date;
+
+  @Column({ length: 500, nullable: true })
+  avatar_url?: string;
+
+  @Column({
+    type: 'enum',
+    enum: Department,
+  })
+  department: Department;
 
   @Column({ type: 'date', nullable: true })
   hire_date?: Date;

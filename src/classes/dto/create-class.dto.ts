@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsNumber,
-  IsOptional,
-  IsEnum,
-  IsDateString,
-} from 'class-validator';
-import { ClassStatus } from '../../common/enums';
+import { IsString, IsNumber, IsOptional, IsDateString } from 'class-validator';
 
 export class CreateClassDto {
   @IsString()
@@ -46,8 +39,4 @@ export class CreateClassDto {
   @IsOptional()
   @IsString()
   end_time?: string;
-
-  @IsOptional()
-  @IsEnum(ClassStatus)
-  status?: ClassStatus;
 }

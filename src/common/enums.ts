@@ -20,9 +20,10 @@ export enum Department {
 }
 
 export enum ClassStatus {
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
+  AVAILABLE = 'available',
+  FULL = 'full',
+  REQUESTED = 'requested',
+  ENROLLED = 'enrolled',
 }
 
 export enum EnrollmentStatus {
@@ -48,4 +49,9 @@ export type RegistrationStatus =
   | 'dropped'
   | 'requested';
 
-export type GradeType = 'Midterm' | 'Final Exam' | 'CourseWork' | 'Lab';
+export enum GradeType {
+  MIDTERM = 'Midterm',
+  FINAL_EXAM = 'Final Exam',
+  COURSEWORK = 'CourseWork',
+  LAB = 'Lab',
+}

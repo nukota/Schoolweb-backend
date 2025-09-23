@@ -4,7 +4,12 @@ import {
   BarChartDataDTO,
   PieChartDataDTO,
 } from 'src/common/dto/common.dto';
-import { ClassStatus, Department } from '../../common/enums';
+import {
+  ClassStatus,
+  Department,
+  RequestStatus,
+  RequestType,
+} from '../../common/enums';
 import { RegistrationHistoryDTO } from './student.dto';
 
 // DTO for Teacher Dashboard
@@ -21,17 +26,20 @@ export class TeacherDashboardDTO {
 
 // DTO for All Classes Page
 export class TeacherClassDTO {
-  id: number;
+  class_id: number;
   class_name: string;
   class_code: string;
   department: string;
   size: number;
   max_size: number;
   semester: string;
-  schedule: string;
+  start_date?: string;
+  end_date?: string;
+  day?: string;
+  start_time?: string;
+  end_time?: string;
   room: string;
   credits: number;
-  status?: ClassStatus;
 }
 
 export class TeacherClassesDTO {
@@ -40,7 +48,7 @@ export class TeacherClassesDTO {
 
 //DTO for Class Details Page
 export class ClassMemberDTO {
-  id: number;
+  user_id: number;
   full_name: string;
   student_id: string;
   avatar?: string;
@@ -52,22 +60,8 @@ export class TeacherClassDetailsDTO extends TeacherClassDTO {
   members: ClassMemberDTO[];
 }
 
-//DTO for Creating a new class
-export class CreateClassDTO {
-  subject_id: number | '';
-  class_code: string;
-  department: Department | '';
-  room: string;
-  day: string;
-  time: string;
-  credits?: number;
-  max_size?: number;
-  semester?: string;
-}
-
 //DTO for Schedule Page
 export class TeacherScheduleItemDTO {
-  id: number;
   department: Department;
   class_name: string;
   class_code: string;
@@ -83,7 +77,7 @@ export class TeacherScheduleDTO {
 
 // DTO for Students List Page
 export class StudentListItemDTO {
-  id: number;
+  user_id: number;
   name: string;
   email: string;
   phone: string;
@@ -96,21 +90,9 @@ export class StudentsPageDTO {
   students: StudentListItemDTO[];
 }
 
-// DTO for inserting a new student
-export class CreateStudentDTO {
-  student_id?: string;
-  full_name: string;
-  password: string;
-  avatar_url?: string;
-  department?: string;
-  phone?: string;
-  email?: string;
-  enrollment_year?: number;
-}
-
 // DTO for Student Details Page
 export class StudentDetailsDTO {
-  id: number;
+  user_id: number;
   name: string;
   email: string;
   phone: string;
@@ -126,4 +108,51 @@ export class StudentDetailsDTO {
   total_classes: number;
   //
   registration_history: RegistrationHistoryDTO;
+}
+
+// DTO for updating student scores
+export class UpdateStudentScoresDTO {
+  student_id: number;
+  scores: number[]; // [coursework, lab, midterm, final]
+}
+
+//DTO for Requests Page
+export class RequestDTO {
+  request_id: number;
+  student_id: string;
+  student_name: string;
+  email: string;
+  phone: string;
+  request_type: RequestType;
+  class_code: string;
+  class_name: string;
+  status: RequestStatus;
+  submitted_date: string;
+  reviewed_date?: string;
+  message: string;
+  avatar_url?: string;
+}
+
+export class RequestsPageDTO {
+  requests: RequestDTO[];
+}
+
+//DTO for Profile Page
+export class TeacherProfileDTO {
+  user_id: number;
+  full_name: string;
+  dob?: string; // ISO date string
+  password_hash: string;
+  avatar_url?: string;
+  department: Department;
+  teacher_id: number;
+  position?: string;
+  hire_date?: string;
+}
+export class UpdateProfileDTO {
+  full_name?: string;
+  dob?: string;
+  password?: string;
+  avatar_url?: string;
+  department?: Department;
 }

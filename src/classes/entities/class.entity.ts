@@ -8,7 +8,6 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { ClassStatus } from '../../common/enums';
 import { Subject } from '../../subjects/entities/subject.entity';
 import { User } from '../../users/entities/user.entity';
 import { Enrollment } from '../../enrollments/entities/enrollment.entity';
@@ -54,13 +53,6 @@ export class Class {
 
   @Column({ length: 50 })
   semester: string;
-
-  @Column({
-    type: 'enum',
-    enum: ClassStatus,
-    default: ClassStatus.ACTIVE,
-  })
-  status: ClassStatus;
 
   @CreateDateColumn()
   created_at: Date;
