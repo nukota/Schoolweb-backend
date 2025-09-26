@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateClassDto {
   @ApiProperty({
-    example: 'CS101',
+    example: 'CS101.A01',
     description: 'Unique class code',
   })
   @IsString()
@@ -38,7 +38,7 @@ export class CreateClassDto {
   max_size: number;
 
   @ApiProperty({
-    example: 'Room 101',
+    example: 'A101',
     description: 'Classroom location',
     required: false,
   })

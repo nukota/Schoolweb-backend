@@ -1,30 +1,20 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiParam,
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { StudentProfilesService } from './student-profiles.service';
 import { CreateStudentProfileDto } from './dto/create-student-profile.dto';
 import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @ApiTags('student-profiles')
 @ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('student-profiles')
-@UseGuards(JwtAuthGuard)
 export class StudentProfilesController {
   constructor(
     private readonly studentProfilesService: StudentProfilesService,
@@ -38,6 +28,7 @@ export class StudentProfilesController {
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 409, description: 'Profile already exists' })
   create(
     @CurrentUser() user: any,
     @Body() createStudentProfileDto: CreateStudentProfileDto,
@@ -48,56 +39,39 @@ export class StudentProfilesController {
     );
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Get all student profiles' })
-  @ApiResponse({
-    status: 200,
-    description: 'Student profiles retrieved successfully',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findAll() {
-    return this.studentProfilesService.findAll();
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get student profile by ID' })
-  @ApiParam({ name: 'id', description: 'Student profile ID' })
+  @Get('me')
+  @ApiOperation({ summary: 'Get current student profile with user info' })
   @ApiResponse({
     status: 200,
     description: 'Student profile retrieved successfully',
   })
-  @ApiResponse({ status: 404, description: 'Student profile not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findOne(@Param('id') id: string) {
-    return this.studentProfilesService.findOne(+id);
+  @ApiResponse({ status: 404, description: 'Profile not found' })
+  getMyProfile(@CurrentUser() user: any) {
+    return this.studentProfilesService.getProfileWithUser(user.user_id);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update student profile by ID' })
-  @ApiParam({ name: 'id', description: 'Student profile ID' })
+  @Patch()
+  @ApiOperation({
+    summary: 'Update student profile',
+    description:
+      'Students can update their phone, date of birth, email, and avatar URL',
+  })
   @ApiResponse({
     status: 200,
     description: 'Student profile updated successfully',
   })
-  @ApiResponse({ status: 404, description: 'Student profile not found' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Profile not found' })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
   update(
-    @Param('id') id: string,
+    @CurrentUser() user: any,
     @Body() updateStudentProfileDto: UpdateStudentProfileDto,
   ) {
-    return this.studentProfilesService.update(+id, updateStudentProfileDto);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete student profile by ID' })
-  @ApiParam({ name: 'id', description: 'Student profile ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Student profile deleted successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Student profile not found' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  remove(@Param('id') id: string) {
-    return this.studentProfilesService.remove(+id);
+    return this.studentProfilesService.update(
+      user.user_id,
+      updateStudentProfileDto,
+    );
   }
 }

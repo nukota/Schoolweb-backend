@@ -50,20 +50,6 @@ export class SubjectsService {
     return subject;
   }
 
-  async findByCode(code: string): Promise<Subject | null> {
-    return await this.subjectRepository.findOne({
-      where: { subject_code: code },
-      relations: ['classes'],
-    });
-  }
-
-  async findByDepartment(department: Department): Promise<Subject[]> {
-    return await this.subjectRepository.find({
-      where: { department },
-      relations: ['classes'],
-    });
-  }
-
   async update(
     id: number,
     updateSubjectDto: UpdateSubjectDto,

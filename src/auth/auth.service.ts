@@ -34,16 +34,12 @@ export class AuthService {
   async signup(signupDto: SignupDto): Promise<AuthResponseDto> {
     const { email, full_name, password, user_type } = signupDto;
 
-    // Check if email already exists in student or teacher profiles
-    const existingStudentProfile = await this.studentProfileRepository.findOne({
+    // Check if email already exists
+    const existingUser = await this.userRepository.findOne({
       where: { email },
     });
 
-    const existingTeacherProfile = await this.teacherProfileRepository.findOne({
-      where: { email },
-    });
-
-    if (existingStudentProfile || existingTeacherProfile) {
+    if (existingUser) {
       throw new ConflictException('Email already exists');
     }
 
@@ -54,6 +50,7 @@ export class AuthService {
     // Create user
     const user = this.userRepository.create({
       full_name,
+      email,
       password: hashedPassword,
       user_type,
     });
@@ -63,7 +60,7 @@ export class AuthService {
     // Generate JWT token
     const payload: JwtPayload = {
       sub: savedUser.user_id,
-      email,
+      email: savedUser.email,
       user_type: savedUser.user_type,
     };
 
@@ -75,7 +72,7 @@ export class AuthService {
       access_token,
       user: {
         user_id: savedUser.user_id,
-        email,
+        email: savedUser.email,
         full_name: savedUser.full_name,
         user_type: savedUser.user_type,
         has_profile: false,
@@ -86,25 +83,11 @@ export class AuthService {
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
     const { email, password } = loginDto;
 
-    // Find user by email in student or teacher profiles
-    let user: User | null = null;
-
-    const studentProfile = await this.studentProfileRepository.findOne({
+    // Find user by email
+    const user = await this.userRepository.findOne({
       where: { email },
-      relations: ['user'],
+      relations: ['student_profile', 'teacher_profile'],
     });
-
-    if (studentProfile) {
-      user = studentProfile.user;
-    } else {
-      const teacherProfile = await this.teacherProfileRepository.findOne({
-        where: { email },
-        relations: ['user'],
-      });
-      if (teacherProfile) {
-        user = teacherProfile.user;
-      }
-    }
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -125,7 +108,7 @@ export class AuthService {
     // Generate JWT token
     const payload: JwtPayload = {
       sub: user.user_id,
-      email,
+      email: user.email,
       user_type: user.user_type,
     };
 
@@ -137,26 +120,11 @@ export class AuthService {
       access_token,
       user: {
         user_id: user.user_id,
-        email,
+        email: user.email,
         full_name: user.full_name,
         user_type: user.user_type,
         has_profile: hasProfile,
       },
     };
-  }
-
-  async findUserById(userId: number): Promise<User | null> {
-    return this.userRepository.findOne({
-      where: { user_id: userId },
-      relations: ['student_profile', 'teacher_profile'],
-    });
-  }
-
-  async validateUser(payload: JwtPayload): Promise<any> {
-    const user = await this.findUserById(payload.sub);
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-    return user;
   }
 }

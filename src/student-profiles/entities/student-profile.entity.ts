@@ -20,9 +20,6 @@ export class StudentProfile {
   @Column({ length: 20, nullable: true })
   phone?: string;
 
-  @Column({ length: 255, unique: true })
-  email: string;
-
   @Column({ type: 'date', nullable: true })
   dob?: Date;
 
@@ -42,7 +39,11 @@ export class StudentProfile {
   created_at: Date;
 
   // Relations
-  @OneToOne(() => User, (user) => user.student_profile)
-  @JoinColumn({ name: 'user_id' })
+  @OneToOne(() => User, (user) => user.student_profile, { onDelete: 'CASCADE' })
+  @JoinColumn({
+    name: 'user_id',
+    referencedColumnName: 'user_id',
+    foreignKeyConstraintName: 'FK_student_profiles_user_id',
+  })
   user: User;
 }

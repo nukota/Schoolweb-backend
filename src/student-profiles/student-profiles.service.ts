@@ -9,6 +9,7 @@ import { CreateStudentProfileDto } from './dto/create-student-profile.dto';
 import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
 import { StudentProfile } from './entities/student-profile.entity';
 import { User } from '../users/entities/user.entity';
+import { UserType } from '../common/enums';
 
 @Injectable()
 export class StudentProfilesService {
@@ -39,15 +40,6 @@ export class StudentProfilesService {
       );
     }
 
-    // Check if email is already taken
-    const existingProfile = await this.studentProfileRepository.findOne({
-      where: { email: createStudentProfileDto.email },
-    });
-
-    if (existingProfile) {
-      throw new ConflictException('Email already exists');
-    }
-
     const studentProfile = this.studentProfileRepository.create({
       ...createStudentProfileDto,
       user_id: userId,
@@ -56,60 +48,84 @@ export class StudentProfilesService {
     return await this.studentProfileRepository.save(studentProfile);
   }
 
-  async findAll(): Promise<StudentProfile[]> {
-    return await this.studentProfileRepository.find({
-      relations: ['user'],
-    });
-  }
-
-  async findOne(id: number): Promise<StudentProfile> {
-    const profile = await this.studentProfileRepository.findOne({
-      where: { user_id: id },
-      relations: ['user'],
+  async update(
+    userId: number,
+    updateStudentProfileDto: UpdateStudentProfileDto,
+  ): Promise<{ user: Partial<User>; profile: StudentProfile }> {
+    // Check if user exists and is a student
+    const user = await this.userRepository.findOne({
+      where: { user_id: userId, user_type: UserType.STUDENT },
+      relations: ['student_profile'],
     });
 
-    if (!profile) {
-      throw new NotFoundException(
-        `Student profile with user ID ${id} not found`,
-      );
+    if (!user) {
+      throw new NotFoundException('Student not found');
     }
 
-    return profile;
-  }
+    if (!user.student_profile) {
+      throw new NotFoundException('Student profile not found');
+    }
 
-  async findByEmail(email: string): Promise<StudentProfile | null> {
-    return await this.studentProfileRepository.findOne({
-      where: { email },
-      relations: ['user'],
-    });
-  }
+    const { email, ...profileData } = updateStudentProfileDto;
 
-  async update(
-    id: number,
-    updateStudentProfileDto: UpdateStudentProfileDto,
-  ): Promise<StudentProfile> {
-    const profile = await this.findOne(id);
-
-    // Check if email is being updated and if it's already taken
-    if (
-      updateStudentProfileDto.email &&
-      updateStudentProfileDto.email !== profile.email
-    ) {
-      const existingProfile = await this.studentProfileRepository.findOne({
-        where: { email: updateStudentProfileDto.email },
+    // Update user email if provided
+    if (email) {
+      // Check if email already exists for another user
+      const existingUser = await this.userRepository.findOne({
+        where: { email },
       });
 
-      if (existingProfile) {
+      if (existingUser && existingUser.user_id !== userId) {
         throw new ConflictException('Email already exists');
       }
+
+      await this.userRepository.update(userId, { email });
+      user.email = email;
     }
 
-    Object.assign(profile, updateStudentProfileDto);
-    return await this.studentProfileRepository.save(profile);
+    // Update student profile
+    if (Object.keys(profileData).length > 0) {
+      await this.studentProfileRepository.update(userId, profileData);
+    }
+
+    // Fetch updated profile
+    const updatedProfile = await this.studentProfileRepository.findOne({
+      where: { user_id: userId },
+    });
+
+    return {
+      user: { email: user.email },
+      profile: updatedProfile!,
+    };
   }
 
-  async remove(id: number): Promise<void> {
-    const profile = await this.findOne(id);
-    await this.studentProfileRepository.remove(profile);
+  async getProfileWithUser(userId: number): Promise<{
+    user: Partial<User>;
+    profile: StudentProfile;
+  }> {
+    const user = await this.userRepository.findOne({
+      where: { user_id: userId, user_type: UserType.STUDENT },
+      relations: ['student_profile'],
+      select: ['user_id', 'full_name', 'email', 'user_type', 'created_at'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (!user.student_profile) {
+      throw new NotFoundException('Student profile not found');
+    }
+
+    return {
+      user: {
+        user_id: user.user_id,
+        full_name: user.full_name,
+        email: user.email,
+        user_type: user.user_type,
+        created_at: user.created_at,
+      },
+      profile: user.student_profile,
+    };
   }
 }

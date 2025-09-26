@@ -58,12 +58,26 @@ export class Class {
   created_at: Date;
 
   // Relations
-  @ManyToOne(() => Subject, (subject) => subject.classes, { eager: true })
-  @JoinColumn({ name: 'subject_id' })
+  @ManyToOne(() => Subject, (subject) => subject.classes, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'subject_id',
+    referencedColumnName: 'subject_id',
+    foreignKeyConstraintName: 'FK_classes_subject_id',
+  })
   subject: Subject;
 
-  @ManyToOne(() => User, (user) => user.taught_classes, { eager: true })
-  @JoinColumn({ name: 'teacher_id' })
+  @ManyToOne(() => User, (user) => user.taught_classes, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'teacher_id',
+    referencedColumnName: 'user_id',
+    foreignKeyConstraintName: 'FK_classes_teacher_id',
+  })
   teacher: User;
 
   @OneToMany(() => Enrollment, (enrollment) => enrollment.class)

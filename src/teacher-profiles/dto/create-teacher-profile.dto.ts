@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsDateString,
   IsEnum,
-  IsEmail,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Department } from 'src/common/enums';
@@ -16,13 +15,6 @@ export class CreateTeacherProfileDto {
   })
   @IsNumber()
   teacher_id: number;
-
-  @ApiProperty({
-    example: 'teacher@example.com',
-    description: 'Teacher email address',
-  })
-  @IsEmail()
-  email: string;
 
   @ApiProperty({
     example: '1980-01-15',

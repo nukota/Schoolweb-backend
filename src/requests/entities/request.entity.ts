@@ -47,13 +47,25 @@ export class Request {
   created_at: Date;
 
   // Relations
-  @ManyToOne(() => User, (user) => user.requests, { eager: true })
-  @JoinColumn({ name: 'student_id' })
+  @ManyToOne(() => User, (user) => user.requests, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'student_id',
+    referencedColumnName: 'user_id',
+    foreignKeyConstraintName: 'FK_requests_student_id',
+  })
   student: User;
 
   @ManyToOne(() => Class, (classEntity) => classEntity.requests, {
     eager: true,
+    onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'class_id' })
+  @JoinColumn({
+    name: 'class_id',
+    referencedColumnName: 'class_id',
+    foreignKeyConstraintName: 'FK_requests_class_id',
+  })
   class: Class;
 }

@@ -19,12 +19,12 @@ export class User {
   @PrimaryGeneratedColumn()
   user_id: number;
 
-  @Column({ unique: true, nullable: true })
-  @Index()
-  student_id?: number;
-
   @Column({ length: 255 })
   full_name: string;
+
+  @Column({ length: 255, unique: true })
+  @Index()
+  email: string;
 
   @Column({ length: 255 })
   password: string;
@@ -48,9 +48,9 @@ export class User {
   @OneToMany(() => Request, (request) => request.student)
   requests: Request[];
 
-  @OneToOne(() => StudentProfile, (profile) => profile.user, { cascade: true })
+  @OneToOne(() => StudentProfile, (profile) => profile.user)
   student_profile?: StudentProfile;
 
-  @OneToOne(() => TeacherProfile, (profile) => profile.user, { cascade: true })
+  @OneToOne(() => TeacherProfile, (profile) => profile.user)
   teacher_profile?: TeacherProfile;
 }

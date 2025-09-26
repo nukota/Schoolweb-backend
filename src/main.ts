@@ -17,7 +17,7 @@ async function bootstrap() {
 
   // Swagger configuration
   const config = new DocumentBuilder()
-    .setTitle('School Management System API')
+    .setTitle('School Management System API 2')
     .setDescription(
       'API for managing school operations including users, classes, enrollments, and more',
     )
@@ -31,16 +31,8 @@ async function bootstrap() {
         description: 'Enter JWT token',
         in: 'header',
       },
-      'JWT-auth',
+      'bearer',
     )
-    .addTag('Authentication', 'User authentication and authorization')
-    .addTag('Users', 'User management operations')
-    .addTag('Student Profiles', 'Student profile management')
-    .addTag('Teacher Profiles', 'Teacher profile management')
-    .addTag('Classes', 'Class management operations')
-    .addTag('Subjects', 'Subject management operations')
-    .addTag('Enrollments', 'Student enrollment management')
-    .addTag('Requests', 'Student requests management')
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

@@ -27,7 +27,7 @@ export class SignupDto {
   full_name: string;
 
   @ApiProperty({
-    example: 'SecurePassword123',
+    example: '123123',
     description: 'User password',
     minLength: 6,
   })
@@ -53,7 +53,7 @@ export class LoginDto {
   email: string;
 
   @ApiProperty({
-    example: 'SecurePassword123',
+    example: '123123',
     description: 'User password',
   })
   @IsString()

@@ -1,34 +1,59 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { EnrollmentsService } from './enrollments.service';
-import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
-import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
+import {
+  RegistrationClassesDTO,
+  AcademicResultsDTO,
+  RegistrationHistoryDTO,
+} from './dto/enrollment-views.dto';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('enrollments')
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('enrollments')
 export class EnrollmentsController {
   constructor(private readonly enrollmentsService: EnrollmentsService) {}
-
-  @Post()
-  create(@Body() createEnrollmentDto: CreateEnrollmentDto) {
-    return this.enrollmentsService.create(createEnrollmentDto);
+  @Get('registration-classes')
+  @ApiOperation({ summary: 'Get available classes for registration' })
+  @ApiResponse({
+    status: 200,
+    description: 'Registration classes retrieved successfully',
+    type: RegistrationClassesDTO,
+  })
+  getRegistrationClasses(
+    @CurrentUser() user: any,
+  ): Promise<RegistrationClassesDTO> {
+    return this.enrollmentsService.getRegistrationClasses(user.user_id);
   }
 
-  @Get()
-  findAll() {
-    return this.enrollmentsService.findAll();
+  @Get('academic-results')
+  @ApiOperation({ summary: 'Get academic results' })
+  @ApiResponse({
+    status: 200,
+    description: 'Academic results retrieved successfully',
+    type: AcademicResultsDTO,
+  })
+  getAcademicResults(@CurrentUser() user: any): Promise<AcademicResultsDTO> {
+    return this.enrollmentsService.getAcademicResults(user.user_id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.enrollmentsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEnrollmentDto: UpdateEnrollmentDto) {
-    return this.enrollmentsService.update(+id, updateEnrollmentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.enrollmentsService.remove(+id);
+  @Get('registration-history')
+  @ApiOperation({ summary: 'Get registration history' })
+  @ApiResponse({
+    status: 200,
+    description: 'Registration history retrieved successfully',
+    type: RegistrationHistoryDTO,
+  })
+  getRegistrationHistory(
+    @CurrentUser() user: any,
+  ): Promise<RegistrationHistoryDTO> {
+    return this.enrollmentsService.getRegistrationHistory(user.user_id);
   }
 }

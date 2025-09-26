@@ -5,9 +5,14 @@ import { ClassesController } from './classes.controller';
 import { Class } from './entities/class.entity';
 import { Subject } from '../subjects/entities/subject.entity';
 import { User } from '../users/entities/user.entity';
+import { Enrollment } from '../enrollments/entities/enrollment.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Class, Subject, User])],
+  imports: [
+    TypeOrmModule.forFeature([Class, Subject, User, Enrollment]),
+    AuthModule,
+  ],
   controllers: [ClassesController],
   providers: [ClassesService],
   exports: [ClassesService],

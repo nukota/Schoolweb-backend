@@ -20,6 +20,7 @@ import { Enrollment } from './enrollments/entities/enrollment.entity';
 import { StudentProfile } from './student-profiles/entities/student-profile.entity';
 import { TeacherProfile } from './teacher-profiles/entities/teacher-profile.entity';
 import { Request } from './requests/entities/request.entity';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -48,7 +49,7 @@ import { Request } from './requests/entities/request.entity';
           TeacherProfile,
           Request,
         ],
-        synchronize: configService.get('NODE_ENV') === 'development', // Only in development
+        // synchronize: configService.get('NODE_ENV') === 'development', // Only in development
         logging: configService.get('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],
@@ -63,6 +64,7 @@ import { Request } from './requests/entities/request.entity';
     StudentProfilesModule,
     TeacherProfilesModule,
     RequestsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

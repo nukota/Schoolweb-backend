@@ -4,11 +4,33 @@ import {
   IsOptional,
   IsDateString,
   IsEnum,
+  IsEmail,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Department } from 'src/common/enums';
 
-export class CreateStudentProfileDto {
+export class CreateStudentDto {
+  @ApiProperty({
+    example: 'John Doe',
+    description: 'Full name of the student',
+  })
+  @IsString()
+  full_name: string;
+
+  @ApiProperty({
+    example: 'john.doe@example.com',
+    description: 'Student email address',
+  })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({
+    example: 'password123',
+    description: 'Student password',
+  })
+  @IsString()
+  password: string;
+
   @ApiProperty({
     example: 12345,
     description: 'Student ID number',

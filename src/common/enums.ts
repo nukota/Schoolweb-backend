@@ -43,12 +43,6 @@ export enum RequestStatus {
   REJECTED = 'rejected',
 }
 
-export type RegistrationStatus =
-  | 'enrolled'
-  | 'completed'
-  | 'dropped'
-  | 'requested';
-
 export enum GradeType {
   MIDTERM = 'Midterm',
   FINAL_EXAM = 'Final Exam',

@@ -4,17 +4,47 @@ import {
   IsOptional,
   IsDateString,
   IsEnum,
+  IsEmail,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Department } from 'src/common/enums';
 
-export class CreateStudentProfileDto {
+export class UpdateStudentDto {
+  @ApiProperty({
+    example: 'John Doe',
+    description: 'Full name of the student',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  full_name?: string;
+
+  @ApiProperty({
+    example: 'john.doe@example.com',
+    description: 'Student email address',
+    required: false,
+  })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @ApiProperty({
+    example: 'newpassword123',
+    description: 'New password for the student',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  password?: string;
+
   @ApiProperty({
     example: 12345,
     description: 'Student ID number',
+    required: false,
   })
+  @IsOptional()
   @IsNumber()
-  student_id: number;
+  student_id?: number;
 
   @ApiProperty({
     example: '+1234567890',
@@ -47,9 +77,11 @@ export class CreateStudentProfileDto {
     enum: Department,
     example: Department.COMPUTER_SCIENCE,
     description: 'Academic department',
+    required: false,
   })
+  @IsOptional()
   @IsEnum(Department)
-  department: Department;
+  department?: Department;
 
   @ApiProperty({
     example: 2023,
