@@ -19,7 +19,7 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('student')
-  @ApiOperation({ summary: 'Get student dashboard data' })
+  @ApiOperation({ summary: 'Get student dashboard data (Student only)' })
   @ApiResponse({
     status: 200,
     description: 'Student dashboard data retrieved successfully',
@@ -33,7 +33,7 @@ export class DashboardController {
   }
 
   @Get('teacher')
-  @ApiOperation({ summary: 'Get teacher dashboard data' })
+  @ApiOperation({ summary: 'Get teacher dashboard data (Teacher only)' })
   @ApiResponse({
     status: 200,
     description: 'Teacher dashboard data retrieved successfully',

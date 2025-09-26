@@ -21,7 +21,9 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class EnrollmentsController {
   constructor(private readonly enrollmentsService: EnrollmentsService) {}
   @Get('registration-classes')
-  @ApiOperation({ summary: 'Get available classes for registration' })
+  @ApiOperation({
+    summary: 'Get available classes for registration (Student only)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Registration classes retrieved successfully',
@@ -34,7 +36,7 @@ export class EnrollmentsController {
   }
 
   @Get('academic-results')
-  @ApiOperation({ summary: 'Get academic results' })
+  @ApiOperation({ summary: 'Get academic results (Student only)' })
   @ApiResponse({
     status: 200,
     description: 'Academic results retrieved successfully',
@@ -45,7 +47,7 @@ export class EnrollmentsController {
   }
 
   @Get('registration-history')
-  @ApiOperation({ summary: 'Get registration history' })
+  @ApiOperation({ summary: 'Get registration history (Student only)' })
   @ApiResponse({
     status: 200,
     description: 'Registration history retrieved successfully',

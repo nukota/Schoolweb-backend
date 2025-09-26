@@ -27,22 +27,17 @@ export class RequestsController {
   constructor(private readonly requestsService: RequestsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new request' })
+  @ApiOperation({ summary: 'Create a new request (Student only)' })
   @ApiResponse({ status: 201, description: 'Request created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   create(@Body() createRequestDto: CreateRequestDto) {
     return this.requestsService.create(createRequestDto);
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Get all requests' })
-  @ApiResponse({ status: 200, description: 'Requests retrieved successfully' })
-  findAll() {
-    return this.requestsService.findAll();
-  }
-
   @Get('all')
-  @ApiOperation({ summary: 'Get all requests for requests page' })
+  @ApiOperation({
+    summary: 'Get all requests for requests page (Teacher only)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Requests page data retrieved successfully',
@@ -53,7 +48,9 @@ export class RequestsController {
   }
 
   @Post('approve/:id')
-  @ApiOperation({ summary: 'Approve request and handle enrollment' })
+  @ApiOperation({
+    summary: 'Approve request and handle enrollment (Teacher only)',
+  })
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiResponse({ status: 200, description: 'Request approved successfully' })
   @ApiResponse({ status: 404, description: 'Request not found' })
@@ -66,7 +63,7 @@ export class RequestsController {
   }
 
   @Post('reject/:id')
-  @ApiOperation({ summary: 'Reject request' })
+  @ApiOperation({ summary: 'Reject request (Teacher only)' })
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiResponse({ status: 200, description: 'Request rejected successfully' })
   @ApiResponse({ status: 404, description: 'Request not found' })
@@ -76,7 +73,7 @@ export class RequestsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete request by ID' })
+  @ApiOperation({ summary: 'Delete request by ID (Both)' })
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiResponse({ status: 200, description: 'Request deleted successfully' })
   @ApiResponse({ status: 404, description: 'Request not found' })

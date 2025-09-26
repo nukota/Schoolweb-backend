@@ -16,6 +16,7 @@ import {
   RequestType,
   EnrollmentStatus,
 } from '../common/enums';
+import { buildRegistrationSemesters } from '../common/utils';
 
 @Injectable()
 export class EnrollmentsService {
@@ -192,7 +193,13 @@ export class EnrollmentsService {
     studentId?: number,
   ): Promise<RegistrationHistoryDTO> {
     if (!studentId) {
-      return { semesters: [] };
+      return {
+        total_semesters: 0,
+        total_classes: 0,
+        total_credits: 0,
+        completed_classes: 0,
+        semesters: [],
+      };
     }
 
     // Get all enrollments for the student (all statuses)
@@ -200,54 +207,35 @@ export class EnrollmentsService {
       where: {
         student_id: studentId,
       },
-      relations: ['class', 'class.subject', 'class.teacher', 'class.requests'],
+      relations: ['class', 'class.subject', 'class.teacher'],
     });
 
-    // Group enrollments by semester
-    const semesterMap = new Map<string, typeof enrollments>();
+    // Use shared function to build semesters
+    const semesters = buildRegistrationSemesters(enrollments);
+
+    // Calculate summary statistics
+    let totalCredits = 0;
+    let completedClasses = 0;
 
     enrollments.forEach((enrollment) => {
-      const semester = enrollment.class.semester;
-      if (!semesterMap.has(semester)) {
-        semesterMap.set(semester, []);
+      if (
+        enrollment.status === EnrollmentStatus.ENROLLED ||
+        enrollment.status === EnrollmentStatus.COMPLETED
+      ) {
+        totalCredits += enrollment.class.subject.credits;
       }
-      semesterMap.get(semester)!.push(enrollment);
+
+      if (enrollment.status === EnrollmentStatus.COMPLETED) {
+        completedClasses++;
+      }
     });
 
-    // Convert to DTO format
-    const semesters = Array.from(semesterMap.entries()).map(
-      ([semesterName, semesterEnrollments]) => {
-        const classes = semesterEnrollments.map((enrollment) => {
-          return {
-            class_code: enrollment.class.class_code,
-            class_name: enrollment.class.subject.subject_name,
-            department: enrollment.class.subject.department,
-            teacher_name: enrollment.class.teacher.full_name,
-            credits: enrollment.class.subject.credits,
-            registration_status: enrollment.status,
-          };
-        });
-
-        // Calculate total credits for the semester
-        const totalCredits = classes.reduce((sum, classItem) => {
-          // Only count credits for enrolled or completed classes
-          if (
-            classItem.registration_status === EnrollmentStatus.ENROLLED ||
-            classItem.registration_status === EnrollmentStatus.COMPLETED
-          ) {
-            return sum + classItem.credits;
-          }
-          return sum;
-        }, 0);
-
-        return {
-          semester: semesterName,
-          total_credits: totalCredits,
-          classes,
-        };
-      },
-    );
-
-    return { semesters };
+    return {
+      total_semesters: semesters.length,
+      total_classes: enrollments.length,
+      total_credits: totalCredits,
+      completed_classes: completedClasses,
+      semesters,
+    };
   }
 }

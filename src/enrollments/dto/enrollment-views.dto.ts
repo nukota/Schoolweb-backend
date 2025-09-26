@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ClassStatus, EnrollmentStatus } from '../../common/enums';
+import { RegistrationSemesterDTO } from 'src/common/dto/registration-semesters.dto';
 
 // DTO classes for Registering Classes Page
 export class RegisterClassDto {
@@ -137,49 +138,22 @@ export class AcademicResultsDTO {
   semesters: SemesterDTO[];
 }
 
-// DTO classes for Registration History
-export class RegistrationClassDTO {
-  @ApiProperty({ example: 'CS101', description: 'Class code' })
-  class_code: string;
+export class RegistrationHistoryDTO {
+  @ApiProperty({ example: 2, description: 'Total number of semesters' })
+  total_semesters: number;
 
   @ApiProperty({
-    example: 'Introduction to Programming',
-    description: 'Class name',
+    example: 10,
+    description: 'Total number of registered classes',
   })
-  class_name: string;
+  total_classes: number;
 
-  @ApiProperty({ example: 'Computer Science', description: 'Department name' })
-  department: string;
-
-  @ApiProperty({ example: 'Dr. Smith', description: 'Teacher name' })
-  teacher_name: string;
-
-  @ApiProperty({ example: 3, description: 'Credit hours' })
-  credits: number;
-
-  @ApiProperty({
-    example: 'enrolled',
-    description: 'Registration status',
-    enum: EnrollmentStatus,
-  })
-  registration_status: EnrollmentStatus;
-}
-
-export class RegistrationSemesterDTO {
-  @ApiProperty({ example: 'Fall 2024', description: 'Semester name' })
-  semester: string;
-
-  @ApiProperty({ example: 15, description: 'Total credits for semester' })
+  @ApiProperty({ example: 30, description: 'Total credits registered' })
   total_credits: number;
 
-  @ApiProperty({
-    type: [RegistrationClassDTO],
-    description: 'Classes registered for this semester',
-  })
-  classes: RegistrationClassDTO[];
-}
+  @ApiProperty({ example: 8, description: 'Number of completed classes' })
+  completed_classes: number;
 
-export class RegistrationHistoryDTO {
   @ApiProperty({
     type: [RegistrationSemesterDTO],
     description: 'Registration history by semester',

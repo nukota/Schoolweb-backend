@@ -21,7 +21,7 @@ export class StudentProfilesController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create student profile' })
+  @ApiOperation({ summary: 'Create student profile (Student only)' })
   @ApiResponse({
     status: 201,
     description: 'Student profile created successfully',
@@ -40,7 +40,9 @@ export class StudentProfilesController {
   }
 
   @Get('me')
-  @ApiOperation({ summary: 'Get current student profile with user info' })
+  @ApiOperation({
+    summary: 'Get current student profile with user info (Student only)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Student profile retrieved successfully',
@@ -53,7 +55,7 @@ export class StudentProfilesController {
 
   @Patch()
   @ApiOperation({
-    summary: 'Update student profile',
+    summary: 'Update student profile (Student only)',
     description:
       'Students can update their phone, date of birth, email, and avatar URL',
   })

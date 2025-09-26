@@ -6,7 +6,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { UpdateRequestDto } from './dto/update-request.dto';
 import { RequestsPageDTO } from './dto/request-views.dto';
 import { Request } from './entities/request.entity';
 import { User } from '../users/entities/user.entity';
@@ -65,12 +64,6 @@ export class RequestsService {
     return await this.requestRepository.save(request);
   }
 
-  async findAll(): Promise<Request[]> {
-    return await this.requestRepository.find({
-      relations: ['student', 'class', 'class.subject'],
-    });
-  }
-
   async getAllRequests(): Promise<RequestsPageDTO> {
     const requests = await this.requestRepository.find({
       relations: [
@@ -111,16 +104,6 @@ export class RequestsService {
     }
 
     return request;
-  }
-
-  async update(
-    id: number,
-    updateRequestDto: UpdateRequestDto,
-  ): Promise<Request> {
-    const request = await this.findOne(id);
-
-    Object.assign(request, updateRequestDto);
-    return await this.requestRepository.save(request);
   }
 
   async approveRequest(id: number): Promise<Request> {

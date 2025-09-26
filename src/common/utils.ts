@@ -71,3 +71,52 @@ export function getAverageScore(scores: number[]): number {
   const weightedAverage = weightedSum / totalWeight;
   return Math.round(weightedAverage * 100) / 100;
 }
+
+export function buildRegistrationSemesters(enrollments: any[]): any[] {
+  // Group enrollments by semester
+  const semesterMap = new Map<string, typeof enrollments>();
+
+  enrollments.forEach((enrollment) => {
+    const semester = enrollment.class.semester;
+    if (!semesterMap.has(semester)) {
+      semesterMap.set(semester, []);
+    }
+    semesterMap.get(semester)!.push(enrollment);
+  });
+
+  // Convert to DTO format
+  const semesters = Array.from(semesterMap.entries()).map(
+    ([semesterName, semesterEnrollments]) => {
+      const classes = semesterEnrollments.map((enrollment) => {
+        return {
+          class_code: enrollment.class.class_code,
+          class_name: enrollment.class.subject.subject_name,
+          department: enrollment.class.subject.department,
+          teacher_name: enrollment.class.teacher.full_name,
+          credits: enrollment.class.subject.credits,
+          registration_status: enrollment.status,
+        };
+      });
+
+      // Calculate total credits for the semester
+      const semesterCredits = classes.reduce((sum, classItem) => {
+        // Only count credits for enrolled or completed classes
+        if (
+          classItem.registration_status === 'ENROLLED' ||
+          classItem.registration_status === 'COMPLETED'
+        ) {
+          return sum + classItem.credits;
+        }
+        return sum;
+      }, 0);
+
+      return {
+        semester: semesterName,
+        total_credits: semesterCredits,
+        classes,
+      };
+    },
+  );
+
+  return semesters;
+}

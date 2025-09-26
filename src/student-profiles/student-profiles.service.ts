@@ -10,6 +10,7 @@ import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
 import { StudentProfile } from './entities/student-profile.entity';
 import { User } from '../users/entities/user.entity';
 import { UserType } from '../common/enums';
+import { StudentProfileDTO } from './dto/student-profile-view.dto';
 
 @Injectable()
 export class StudentProfilesService {
@@ -99,14 +100,10 @@ export class StudentProfilesService {
     };
   }
 
-  async getProfileWithUser(userId: number): Promise<{
-    user: Partial<User>;
-    profile: StudentProfile;
-  }> {
+  async getProfileWithUser(userId: number): Promise<StudentProfileDTO> {
     const user = await this.userRepository.findOne({
       where: { user_id: userId, user_type: UserType.STUDENT },
       relations: ['student_profile'],
-      select: ['user_id', 'full_name', 'email', 'user_type', 'created_at'],
     });
 
     if (!user) {
@@ -117,15 +114,18 @@ export class StudentProfilesService {
       throw new NotFoundException('Student profile not found');
     }
 
+    const profile = user.student_profile;
+
     return {
-      user: {
-        user_id: user.user_id,
-        full_name: user.full_name,
-        email: user.email,
-        user_type: user.user_type,
-        created_at: user.created_at,
-      },
-      profile: user.student_profile,
+      user_id: user.user_id,
+      student_id: profile.student_id,
+      full_name: user.full_name,
+      email: user.email,
+      phone: profile.phone,
+      dob: profile.dob?.toString(),
+      avatar_url: profile.avatar_url,
+      department: profile.department,
+      enrollment_year: profile.enrollment_year,
     };
   }
 }

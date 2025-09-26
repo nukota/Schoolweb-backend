@@ -39,7 +39,7 @@ export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new class' })
+  @ApiOperation({ summary: 'Create a new class (Teacher only)' })
   @ApiResponse({ status: 201, description: 'Class created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   create(@Body() createClassDto: CreateClassDto) {
@@ -47,7 +47,7 @@ export class ClassesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update class by ID' })
+  @ApiOperation({ summary: 'Update class by ID (Teacher only)' })
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({ status: 200, description: 'Class updated successfully' })
   @ApiResponse({ status: 404, description: 'Class not found' })
@@ -56,7 +56,7 @@ export class ClassesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete class by ID' })
+  @ApiOperation({ summary: 'Delete class by ID (Teacher only)' })
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({ status: 200, description: 'Class deleted successfully' })
   @ApiResponse({ status: 404, description: 'Class not found' })
@@ -65,7 +65,7 @@ export class ClassesController {
   }
 
   @Get('teacher-classes')
-  @ApiOperation({ summary: 'Get all classes for a teacher' })
+  @ApiOperation({ summary: 'Get all classes for a teacher (Teacher only)' })
   @ApiResponse({
     status: 200,
     description: 'Teacher classes retrieved successfully',
@@ -77,7 +77,9 @@ export class ClassesController {
   }
 
   @Get('teacher-class/:id')
-  @ApiOperation({ summary: 'Get detailed class information for teacher' })
+  @ApiOperation({
+    summary: 'Get detailed class information for teacher (Teacher only)',
+  })
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({
     status: 200,
@@ -94,7 +96,7 @@ export class ClassesController {
   }
 
   @Get('student-classes')
-  @ApiOperation({ summary: 'Get all classes for the authenticated student' })
+  @ApiOperation({ summary: 'Get all classes for the student (Student only)' })
   @ApiResponse({
     status: 200,
     description: 'Student classes retrieved successfully',
@@ -107,7 +109,7 @@ export class ClassesController {
 
   @Get('student-schedule')
   @ApiOperation({
-    summary: 'Get schedule for the authenticated student',
+    summary: 'Get schedule for the student (Student only)',
     description:
       'Requires start_date (Monday) and end_date (Sunday) query parameters of the same week',
   })
@@ -146,7 +148,7 @@ export class ClassesController {
 
   @Get('teacher-schedule')
   @ApiOperation({
-    summary: 'Get schedule for the authenticated teacher',
+    summary: 'Get schedule for the teacher (Teacher only)',
     description:
       'Requires start_date (Monday) and end_date (Sunday) query parameters of the same week',
   })
