@@ -1,15 +1,8 @@
-import { IsNumber, IsString, IsOptional, IsEnum } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { RequestType, RequestStatus } from '../../common/enums';
+import { IsNumber, IsString, IsEnum, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { RequestType } from '../../common/enums';
 
-export class CreateRequestDto {
-  @ApiProperty({
-    example: 1,
-    description: 'Student ID reference',
-  })
-  @IsNumber()
-  student_id: number;
-
+export class CreateRequestDTO {
   @ApiProperty({
     example: 1,
     description: 'Class ID reference',
@@ -25,20 +18,11 @@ export class CreateRequestDto {
   @IsEnum(RequestType)
   request_type: RequestType;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'I would like to enroll in this class because...',
-    description: 'Request message from the student',
-  })
-  @IsString()
-  message: string;
-
-  @ApiProperty({
-    enum: RequestStatus,
-    example: RequestStatus.PENDING,
-    description: 'Status of the request',
-    required: false,
+    description: 'Optional request message from the student',
   })
   @IsOptional()
-  @IsEnum(RequestStatus)
-  status?: RequestStatus;
+  @IsString()
+  message?: string;
 }

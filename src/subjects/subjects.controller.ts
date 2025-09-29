@@ -16,8 +16,8 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { SubjectsService } from './subjects.service';
-import { CreateSubjectDto } from './dto/create-subject.dto';
-import { UpdateSubjectDto } from './dto/update-subject.dto';
+import { CreateSubjectDTO } from './dto/create-subject.dto';
+import { UpdateSubjectDTO } from './dto/update-subject.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
 
 @ApiTags('subjects')
@@ -31,8 +31,8 @@ export class SubjectsController {
   @ApiOperation({ summary: 'Create a new subject (Teacher only)' })
   @ApiResponse({ status: 201, description: 'Subject created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  create(@Body() createSubjectDto: CreateSubjectDto) {
-    return this.subjectsService.create(createSubjectDto);
+  create(@Body() createSubjectDTO: CreateSubjectDTO) {
+    return this.subjectsService.create(createSubjectDTO);
   }
 
   @Get()
@@ -42,22 +42,13 @@ export class SubjectsController {
     return this.subjectsService.findAll();
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get subject by ID (Teacher only)' })
-  @ApiParam({ name: 'id', description: 'Subject ID' })
-  @ApiResponse({ status: 200, description: 'Subject retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'Subject not found' })
-  findOne(@Param('id') id: string) {
-    return this.subjectsService.findOne(+id);
-  }
-
   @Patch(':id')
   @ApiOperation({ summary: 'Update subject by ID (Teacher only)' })
   @ApiParam({ name: 'id', description: 'Subject ID' })
   @ApiResponse({ status: 200, description: 'Subject updated successfully' })
   @ApiResponse({ status: 404, description: 'Subject not found' })
-  update(@Param('id') id: string, @Body() updateSubjectDto: UpdateSubjectDto) {
-    return this.subjectsService.update(+id, updateSubjectDto);
+  update(@Param('id') id: string, @Body() updateSubjectDTO: UpdateSubjectDTO) {
+    return this.subjectsService.update(+id, updateSubjectDTO);
   }
 
   @Delete(':id')

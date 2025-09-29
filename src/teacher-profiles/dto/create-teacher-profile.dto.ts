@@ -1,20 +1,14 @@
-import {
-  IsNumber,
-  IsString,
-  IsOptional,
-  IsDateString,
-  IsEnum,
-} from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Department } from 'src/common/enums';
 
-export class CreateTeacherProfileDto {
+export class CreateTeacherProfileDTO {
   @ApiProperty({
     example: 12345,
     description: 'Teacher ID number',
   })
-  @IsNumber()
-  teacher_id: number;
+  @IsString()
+  teacher_id: string;
 
   @ApiProperty({
     example: '1980-01-15',

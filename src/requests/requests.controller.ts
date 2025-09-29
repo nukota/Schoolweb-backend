@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import {
   ApiTags,
   ApiOperation,
@@ -15,7 +16,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { RequestsService } from './requests.service';
-import { CreateRequestDto } from './dto/create-request.dto';
+import { CreateRequestDTO } from './dto/create-request.dto';
 import { RequestsPageDTO } from './dto/request-views.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
 
@@ -30,8 +31,8 @@ export class RequestsController {
   @ApiOperation({ summary: 'Create a new request (Student only)' })
   @ApiResponse({ status: 201, description: 'Request created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  create(@Body() createRequestDto: CreateRequestDto) {
-    return this.requestsService.create(createRequestDto);
+  create(@CurrentUser() user, @Body() createRequestDTO: CreateRequestDTO) {
+    return this.requestsService.create(user.user_id, createRequestDTO);
   }
 
   @Get('all')
@@ -43,8 +44,9 @@ export class RequestsController {
     description: 'Requests page data retrieved successfully',
     type: RequestsPageDTO,
   })
-  getAllRequests(): Promise<RequestsPageDTO> {
-    return this.requestsService.getAllRequests();
+  getAllRequests(@CurrentUser() user): Promise<RequestsPageDTO> {
+    const teacherId = user.user_id;
+    return this.requestsService.getAllRequests(teacherId);
   }
 
   @Post('approve/:id')

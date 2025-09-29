@@ -1,15 +1,9 @@
-import {
-  IsEmail,
-  IsString,
-  MinLength,
-  IsEnum,
-  IsOptional,
-} from 'class-validator';
+import { IsEmail, IsString, MinLength, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserType } from '../../common/enums';
 import { BaseResponseDTO } from '../../common/dto/common.dto';
 
-export class SignupDto {
+export class SignupDTO {
   @ApiProperty({
     example: 'john.doe@example.com',
     description: 'User email address',
@@ -44,7 +38,7 @@ export class SignupDto {
   user_type: UserType;
 }
 
-export class LoginDto {
+export class LoginDTO {
   @ApiProperty({
     example: 'john.doe@example.com',
     description: 'User email address',
@@ -60,7 +54,7 @@ export class LoginDto {
   password: string;
 }
 
-export class AuthResponseDto extends BaseResponseDTO {
+export class AuthResponseDTO extends BaseResponseDTO {
   @ApiProperty({
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
     description: 'JWT access token',
@@ -103,4 +97,24 @@ export class JwtPayload {
 
   @ApiProperty({ description: 'Token expiration', required: false })
   exp?: number;
+}
+
+export class MeUserDTO {
+  @ApiProperty({ example: 1 })
+  user_id: number;
+
+  @ApiProperty({ example: 'user@example.com' })
+  email: string;
+
+  @ApiProperty({ example: 'John Doe' })
+  full_name: string;
+
+  @ApiProperty({ example: 'student' })
+  user_type: string;
+
+  @ApiProperty({ example: true })
+  has_profile: boolean;
+
+  @ApiProperty({ example: 'https://example.com/avatar.jpg', required: false })
+  avatar_url?: string;
 }

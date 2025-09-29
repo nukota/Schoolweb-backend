@@ -30,8 +30,8 @@ export class Request {
   })
   request_type: RequestType;
 
-  @Column({ type: 'text' })
-  message: string;
+  @Column({ type: 'text', nullable: true })
+  message?: string;
 
   @Column({
     type: 'enum',

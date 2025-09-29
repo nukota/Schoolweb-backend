@@ -4,23 +4,17 @@ import { Repository } from 'typeorm';
 import { TeacherDashboardDTO } from './dto/teacher-dashboard.dto';
 import { StudentDashboardDTO } from './dto/student-dashboard.dto';
 import { Department, GradeType, EnrollmentStatus } from '../common/enums';
-import { User } from '../users/entities/user.entity';
 import { Enrollment } from '../enrollments/entities/enrollment.entity';
 import { Class } from '../classes/entities/class.entity';
-import { Subject } from '../subjects/entities/subject.entity';
 import { getCurrentSemester, getAverageScore } from '../common/utils';
 
 @Injectable()
 export class DashboardService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
     @InjectRepository(Enrollment)
     private readonly enrollmentRepository: Repository<Enrollment>,
     @InjectRepository(Class)
     private readonly classRepository: Repository<Class>,
-    @InjectRepository(Subject)
-    private readonly subjectRepository: Repository<Subject>,
   ) {}
 
   async getStudentDashboard(userId: number): Promise<StudentDashboardDTO> {
@@ -106,6 +100,7 @@ export class DashboardService {
       current_class_scores: currentClassScores,
       bar_chart_data: barChartData,
       pie_chart_data: pieChartData,
+      current_semester: currentSemester,
     };
   }
 
@@ -137,7 +132,7 @@ export class DashboardService {
       class_name: enrollment.class.subject.subject_name,
       class_code: enrollment.class.class_code,
       department: enrollment.class.subject.department,
-      date: enrollment.class.start_date || currentDateStr,
+      date: this.getNextClassDate(enrollment.class),
       time: enrollment.class.start_time || '09:00 AM',
     }));
   }
@@ -362,7 +357,7 @@ export class DashboardService {
         : 0;
     const scoreChange =
       overallAvgScore > 0
-        ? ((currentAvgScore - overallAvgScore) / overallAvgScore) * 100
+        ? (currentAvgScore - overallAvgScore) / overallAvgScore
         : 0;
 
     // Get upcoming classes (next 4 classes)
@@ -398,36 +393,36 @@ export class DashboardService {
       upcoming_classes: upcomingClasses,
       bar_chart_data: barChartData,
       pie_chart_data: pieChartData,
+      current_semester: currentSemester,
     };
   }
 
   private async getTeacherUpcomingClasses(userId: number) {
     const currentDate = new Date();
     const currentDateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-    const currentSemester = getCurrentSemester();
 
-    // Get upcoming classes for the teacher
+    // Get upcoming classes for the teacher (no semester check)
     const upcomingClasses = await this.classRepository.find({
       where: {
         teacher_id: userId,
-        semester: currentSemester,
       },
       relations: ['subject'],
       order: { start_date: 'ASC', start_time: 'ASC' },
       take: 4,
     });
 
-    // Filter classes that haven't ended yet
+    // Filter classes that haven't ended yet and start in the future
     const filteredClasses = upcomingClasses.filter(
       (classEntity) =>
-        !classEntity.end_date || classEntity.end_date >= currentDateStr,
+        (!classEntity.end_date || classEntity.end_date >= currentDateStr) &&
+        (!classEntity.start_date || classEntity.start_date >= currentDateStr),
     );
 
     return filteredClasses.map((classEntity) => ({
       class_name: classEntity.subject.subject_name,
       class_code: classEntity.class_code,
       department: classEntity.subject.department,
-      date: classEntity.start_date || currentDateStr,
+      date: this.getNextClassDate(classEntity),
       time: classEntity.start_time || '09:00 AM',
     }));
   }
@@ -478,6 +473,57 @@ export class DashboardService {
     }
 
     return Array.from(calendarDates).sort();
+  }
+
+  private getNextClassDate(classEntity: Class): string {
+    const currentDate = new Date();
+    const currentDateStr = currentDate.toISOString().split('T')[0];
+
+    // If class has a recurring day, calculate next occurrence
+    if (classEntity.day && classEntity.start_date && classEntity.end_date) {
+      const dayMap: { [key: string]: number } = {
+        Sunday: 0,
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6,
+      };
+
+      const targetDay = dayMap[classEntity.day];
+      if (targetDay !== undefined) {
+        // Start from today or class start date, whichever is later
+        const startFrom = new Date(
+          Math.max(
+            new Date(classEntity.start_date).getTime(),
+            currentDate.getTime(),
+          ),
+        );
+
+        // Find the next occurrence of the target day
+        const current = new Date(startFrom);
+        const daysToAdd = (targetDay - current.getDay() + 7) % 7;
+        if (
+          daysToAdd === 0 &&
+          current.toISOString().split('T')[0] === currentDateStr
+        ) {
+          // If it's today and matches the day, but we want the next occurrence
+          current.setDate(current.getDate() + 7);
+        } else {
+          current.setDate(current.getDate() + daysToAdd);
+        }
+
+        // Check if the calculated date is within the class end date
+        const endDate = new Date(classEntity.end_date);
+        if (current <= endDate) {
+          return current.toISOString().split('T')[0];
+        }
+      }
+    }
+
+    // Fallback to start_date if no recurring day or calculation failed
+    return classEntity.start_date || currentDateStr;
   }
 
   private generateRecurringDates(

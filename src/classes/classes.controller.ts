@@ -20,8 +20,8 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { ClassesService } from './classes.service';
-import { CreateClassDto } from './dto/create-class.dto';
-import { UpdateClassDto } from './dto/update-class.dto';
+import { CreateClassDTO } from './dto/create-class.dto';
+import { UpdateClassDTO } from './dto/update-class.dto';
 import {
   TeacherClassesDTO,
   TeacherClassDetailsDTO,
@@ -29,6 +29,12 @@ import {
   StudentScheduleDTO,
   TeacherScheduleDTO,
 } from './dto/class-views.dto';
+import {
+  AddStudentsToClassDTO,
+  RemoveStudentsFromClassDTO,
+  EditStudentScoresDTO,
+  ClassManagementResponseDTO,
+} from './dto/class-management.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
 
 @ApiTags('classes')
@@ -42,8 +48,8 @@ export class ClassesController {
   @ApiOperation({ summary: 'Create a new class (Teacher only)' })
   @ApiResponse({ status: 201, description: 'Class created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  create(@Body() createClassDto: CreateClassDto) {
-    return this.classesService.create(createClassDto);
+  create(@Body() createClassDTO: CreateClassDTO) {
+    return this.classesService.create(createClassDTO);
   }
 
   @Patch(':id')
@@ -51,8 +57,8 @@ export class ClassesController {
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({ status: 200, description: 'Class updated successfully' })
   @ApiResponse({ status: 404, description: 'Class not found' })
-  update(@Param('id') id: string, @Body() updateClassDto: UpdateClassDto) {
-    return this.classesService.update(+id, updateClassDto);
+  update(@Param('id') id: string, @Body() updateClassDTO: UpdateClassDTO) {
+    return this.classesService.update(+id, updateClassDTO);
   }
 
   @Delete(':id')
@@ -137,7 +143,6 @@ export class ClassesController {
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
   ): Promise<StudentScheduleDTO> {
-    this.validateWeekDates(startDate, endDate);
     const studentId = req.user.user_id;
     return this.classesService.getStudentSchedule(
       studentId,
@@ -176,7 +181,6 @@ export class ClassesController {
     @Query('start_date') startDate: string,
     @Query('end_date') endDate: string,
   ): Promise<TeacherScheduleDTO> {
-    this.validateWeekDates(startDate, endDate);
     const teacherId = req.user.user_id;
     return this.classesService.getTeacherSchedule(
       teacherId,
@@ -185,41 +189,72 @@ export class ClassesController {
     );
   }
 
-  private validateWeekDates(startDate: string, endDate: string): void {
-    if (!startDate || !endDate) {
-      throw new BadRequestException(
-        'Both start_date and end_date query parameters are required',
-      );
-    }
+  @Post(':id/add-students')
+  @ApiOperation({ summary: 'Add students to class (Teacher only)' })
+  @ApiParam({ name: 'id', description: 'Class ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Students added successfully',
+    type: ClassManagementResponseDTO,
+  })
+  @ApiResponse({ status: 404, description: 'Class not found' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  addStudentsToClass(
+    @Param('id') id: string,
+    @Body() addStudentsDTO: AddStudentsToClassDTO,
+  ): Promise<ClassManagementResponseDTO> {
+    return this.classesService.addStudentsToClass(+id, addStudentsDTO);
+  }
 
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
+  @Delete(':id/remove-students')
+  @ApiOperation({ summary: 'Remove students from class (Teacher only)' })
+  @ApiParam({ name: 'id', description: 'Class ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Students removed successfully',
+    type: ClassManagementResponseDTO,
+  })
+  @ApiResponse({ status: 404, description: 'Class not found' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  removeStudentsFromClass(
+    @Param('id') id: string,
+    @Body() removeStudentsDTO: RemoveStudentsFromClassDTO,
+  ): Promise<ClassManagementResponseDTO> {
+    return this.classesService.removeStudentsFromClass(+id, removeStudentsDTO);
+  }
 
-    // Check if dates are valid
-    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
-      throw new BadRequestException(
-        'Invalid date format. Use YYYY-MM-DD format.',
-      );
-    }
+  @Patch(':id/edit-scores')
+  @ApiOperation({ summary: 'Edit student scores for class (Teacher only)' })
+  @ApiParam({ name: 'id', description: 'Class ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Student scores updated successfully',
+    type: ClassManagementResponseDTO,
+  })
+  @ApiResponse({ status: 404, description: 'Class not found' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  editStudentScores(
+    @Param('id') id: string,
+    @Body() editScoresDTO: EditStudentScoresDTO,
+  ): Promise<ClassManagementResponseDTO> {
+    return this.classesService.editStudentScores(+id, editScoresDTO);
+  }
 
-    // Check if start_date is Monday (getDay() returns 1 for Monday)
-    if (startDateObj.getDay() !== 1) {
-      throw new BadRequestException('start_date must be a Monday');
-    }
-
-    // Check if end_date is Sunday (getDay() returns 0 for Sunday)
-    if (endDateObj.getDay() !== 0) {
-      throw new BadRequestException('end_date must be a Sunday');
-    }
-
-    // Check if they are the same week (end_date should be 6 days after start_date)
-    const timeDiff = endDateObj.getTime() - startDateObj.getTime();
-    const dayDiff = timeDiff / (1000 * 60 * 60 * 24);
-
-    if (dayDiff !== 6) {
-      throw new BadRequestException(
-        'start_date and end_date must be Monday and Sunday of the same week',
-      );
-    }
+  @Patch(':id/mark-complete')
+  @ApiOperation({ summary: 'Mark class as completed (Teacher only)' })
+  @ApiParam({ name: 'id', description: 'Class ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Class marked as completed successfully',
+    type: ClassManagementResponseDTO,
+  })
+  @ApiResponse({ status: 404, description: 'Class not found' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  markClassAsComplete(
+    @Param('id') id: string,
+    @Request() req,
+  ): Promise<ClassManagementResponseDTO> {
+    const teacherId = req.user.user_id;
+    return this.classesService.markClassAsComplete(+id, teacherId);
   }
 }

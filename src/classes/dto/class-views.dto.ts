@@ -15,8 +15,12 @@ export class TeacherClassDTO {
   @ApiProperty({ example: 'CS101', description: 'Class code' })
   class_code: string;
 
-  @ApiProperty({ example: 'Computer Science', description: 'Department name' })
-  department: string;
+  @ApiProperty({
+    enum: Department,
+    example: Department.COMPUTER_SCIENCE,
+    description: 'Department',
+  })
+  department: Department;
 
   @ApiProperty({ example: 25, description: 'Current class size' })
   size: number;
@@ -131,8 +135,12 @@ export class StudentClassDTO {
   @ApiProperty({ example: 'Dr. Smith', description: 'Teacher name' })
   teacher_name: string;
 
-  @ApiProperty({ example: 'Computer Science', description: 'Department name' })
-  department: string;
+  @ApiProperty({
+    enum: Department,
+    example: Department.COMPUTER_SCIENCE,
+    description: 'Department',
+  })
+  department: Department;
 
   @ApiProperty({
     example: '2024-01-15',
@@ -198,6 +206,7 @@ export class StudentClassesDTO {
 export class StudentScheduleItemDTO {
   @ApiProperty({
     enum: Department,
+    example: Department.COMPUTER_SCIENCE,
     description: 'Department',
   })
   department: Department;
@@ -238,6 +247,7 @@ export class StudentScheduleDTO {
 export class TeacherScheduleItemDTO {
   @ApiProperty({
     enum: Department,
+    example: Department.COMPUTER_SCIENCE,
     description: 'Department',
   })
   department: Department;

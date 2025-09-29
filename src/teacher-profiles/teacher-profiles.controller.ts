@@ -1,22 +1,13 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Param,
-  UseGuards,
-  Put,
-  Get,
-} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Put, Get } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiParam,
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { TeacherProfilesService } from './teacher-profiles.service';
-import { CreateTeacherProfileDto } from './dto/create-teacher-profile.dto';
-import { UpdateTeacherProfileDto } from './dto/update-teacher-profile.dto';
+import { CreateTeacherProfileDTO } from './dto/create-teacher-profile.dto';
+import { UpdateTeacherProfileDTO } from './dto/update-teacher-profile.dto';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
@@ -40,11 +31,11 @@ export class TeacherProfilesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(
     @CurrentUser() user: any,
-    @Body() createTeacherProfileDto: CreateTeacherProfileDto,
+    @Body() createTeacherProfileDTO: CreateTeacherProfileDTO,
   ) {
     return this.teacherProfilesService.create(
       user.user_id,
-      createTeacherProfileDto,
+      createTeacherProfileDTO,
     );
   }
 
@@ -78,11 +69,11 @@ export class TeacherProfilesController {
   @ApiResponse({ status: 409, description: 'Email already exists' })
   update(
     @CurrentUser() user: any,
-    @Body() updateTeacherProfileDto: UpdateTeacherProfileDto,
+    @Body() updateTeacherProfileDTO: UpdateTeacherProfileDTO,
   ) {
     return this.teacherProfilesService.update(
       user.user_id,
-      updateTeacherProfileDto,
+      updateTeacherProfileDTO,
     );
   }
 }

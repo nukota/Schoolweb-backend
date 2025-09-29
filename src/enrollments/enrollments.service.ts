@@ -7,28 +7,22 @@ import {
   RegistrationHistoryDTO,
 } from './dto/enrollment-views.dto';
 import { Enrollment } from './entities/enrollment.entity';
-import { User } from '../users/entities/user.entity';
 import { Class } from '../classes/entities/class.entity';
-import { Request } from '../requests/entities/request.entity';
 import {
   ClassStatus,
   RequestStatus,
   RequestType,
   EnrollmentStatus,
 } from '../common/enums';
-import { buildRegistrationSemesters } from '../common/utils';
+import { buildRegistrationSemesters, getAverageScore } from '../common/utils';
 
 @Injectable()
 export class EnrollmentsService {
   constructor(
     @InjectRepository(Enrollment)
     private readonly enrollmentRepository: Repository<Enrollment>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
     @InjectRepository(Class)
     private readonly classRepository: Repository<Class>,
-    @InjectRepository(Request)
-    private readonly requestRepository: Repository<Request>,
   ) {}
 
   async getRegistrationClasses(
@@ -61,7 +55,7 @@ export class EnrollmentsService {
       return false;
     });
 
-    // Map classes to RegisterClassDto format with proper status
+    // Map classes to RegisterClassDTO format with proper status
     const registrationClasses = await Promise.all(
       availableClasses.map(async (classEntity) => {
         let status: ClassStatus = ClassStatus.AVAILABLE;
@@ -155,23 +149,10 @@ export class EnrollmentsService {
           while (paddedScores.length < 5) {
             paddedScores.push(0);
           }
-          // Calculate average if not provided (average of first 4 scores)
-          if (
-            paddedScores[4] === 0 &&
-            (paddedScores[0] ||
-              paddedScores[1] ||
-              paddedScores[2] ||
-              paddedScores[3])
-          ) {
-            const validScores = paddedScores
-              .slice(0, 4)
-              .filter((score) => score > 0);
-            if (validScores.length > 0) {
-              paddedScores[4] =
-                validScores.reduce((sum, score) => sum + score, 0) /
-                validScores.length;
-            }
-          }
+
+          // Always recalculate average using weighted formula (even if already exists)
+          const calculatedAverage = getAverageScore(paddedScores.slice(0, 4));
+          paddedScores[4] = calculatedAverage;
 
           return {
             class_code: enrollment.class.class_code,

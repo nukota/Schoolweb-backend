@@ -52,4 +52,10 @@ export class StudentDashboardDTO {
     description: 'Pie chart data for dashboard',
   })
   pie_chart_data: PieChartDataDTO[];
+
+  @ApiProperty({
+    description: 'Current semester identifier',
+    example: 'First 2025',
+  })
+  current_semester: string;
 }

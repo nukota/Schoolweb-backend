@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateStudentProfileDto } from './dto/create-student-profile.dto';
-import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
+import { CreateStudentProfileDTO } from './dto/create-student-profile.dto';
+import { UpdateStudentProfileDTO } from './dto/update-student-profile.dto';
 import { StudentProfile } from './entities/student-profile.entity';
 import { User } from '../users/entities/user.entity';
 import { UserType } from '../common/enums';
@@ -23,7 +23,7 @@ export class StudentProfilesService {
 
   async create(
     userId: number,
-    createStudentProfileDto: CreateStudentProfileDto,
+    createStudentProfileDTO: CreateStudentProfileDTO,
   ): Promise<StudentProfile> {
     // Check if user exists and is a student
     const user = await this.userRepository.findOne({
@@ -42,7 +42,7 @@ export class StudentProfilesService {
     }
 
     const studentProfile = this.studentProfileRepository.create({
-      ...createStudentProfileDto,
+      ...createStudentProfileDTO,
       user_id: userId,
     });
 
@@ -51,8 +51,8 @@ export class StudentProfilesService {
 
   async update(
     userId: number,
-    updateStudentProfileDto: UpdateStudentProfileDto,
-  ): Promise<{ user: Partial<User>; profile: StudentProfile }> {
+    updateStudentProfileDTO: UpdateStudentProfileDTO,
+  ): Promise<UpdateStudentProfileDTO> {
     // Check if user exists and is a student
     const user = await this.userRepository.findOne({
       where: { user_id: userId, user_type: UserType.STUDENT },
@@ -67,7 +67,7 @@ export class StudentProfilesService {
       throw new NotFoundException('Student profile not found');
     }
 
-    const { email, ...profileData } = updateStudentProfileDto;
+    const { email, ...profileData } = updateStudentProfileDTO;
 
     // Update user email if provided
     if (email) {
@@ -94,10 +94,16 @@ export class StudentProfilesService {
       where: { user_id: userId },
     });
 
-    return {
-      user: { email: user.email },
-      profile: updatedProfile!,
+    // Return only the fields defined in UpdateStudentProfileDTO
+    const result: UpdateStudentProfileDTO = {
+      phone: updatedProfile?.phone,
+      dob: updatedProfile?.dob
+        ? new Date(updatedProfile.dob).toISOString().split('T')[0]
+        : undefined,
+      email: user.email,
+      avatar_url: updatedProfile?.avatar_url,
     };
+    return result;
   }
 
   async getProfileWithUser(userId: number): Promise<StudentProfileDTO> {

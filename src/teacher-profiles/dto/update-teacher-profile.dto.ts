@@ -1,10 +1,10 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateTeacherProfileDto } from './create-teacher-profile.dto';
+import { CreateTeacherProfileDTO } from './create-teacher-profile.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, IsEmail } from 'class-validator';
 
-export class UpdateTeacherProfileDto extends PartialType(
-  CreateTeacherProfileDto,
+export class UpdateTeacherProfileDTO extends PartialType(
+  CreateTeacherProfileDTO,
 ) {
   @ApiProperty({ example: 'teacher@example.com', required: false })
   @IsOptional()

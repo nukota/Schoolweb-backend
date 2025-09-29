@@ -6,6 +6,7 @@ import {
   Param,
   Body,
   Post,
+  Delete,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,9 +18,9 @@ import {
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UsersService } from './users.service';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { CreateStudentDto } from './dto/create-student.dto';
-import { UpdateStudentDto } from './dto/update-student.dto';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
+import { CreateStudentDTO } from './dto/create-student.dto';
+import { UpdateStudentDTO } from './dto/update-student.dto';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -42,9 +43,9 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found' })
   resetPassword(
     @CurrentUser() user: any,
-    @Body() resetPasswordDto: ResetPasswordDto,
+    @Body() resetPasswordDTO: ResetPasswordDTO,
   ) {
-    return this.usersService.resetPassword(user.user_id, resetPasswordDto);
+    return this.usersService.resetPassword(user.user_id, resetPasswordDTO);
   }
 
   @Get('students')
@@ -56,6 +57,17 @@ export class UsersController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getStudentsPage() {
     return this.usersService.getStudentsPage();
+  }
+
+  @Get('teachers')
+  @ApiOperation({ summary: 'Get all teachers list (Both)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Teachers list retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  getTeachers() {
+    return this.usersService.getTeachersList();
   }
 
   @Get('students/:id')
@@ -84,8 +96,8 @@ export class UsersController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
-  createStudent(@Body() createStudentDto: CreateStudentDto) {
-    return this.usersService.createStudent(createStudentDto);
+  createStudent(@Body() createStudentDTO: CreateStudentDTO) {
+    return this.usersService.createStudent(createStudentDTO);
   }
 
   @Put('update-student/:id')
@@ -105,8 +117,36 @@ export class UsersController {
   @ApiResponse({ status: 409, description: 'Email already exists' })
   updateStudent(
     @Param('id') id: string,
-    @Body() updateStudentDto: UpdateStudentDto,
+    @Body() updateStudentDTO: UpdateStudentDTO,
   ) {
-    return this.usersService.updateStudent(+id, updateStudentDto);
+    return this.usersService.updateStudent(+id, updateStudentDTO);
+  }
+
+  @Delete('delete-account')
+  @ApiOperation({ summary: 'Delete current user account (Both)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Account deleted successfully',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  deleteCurrentUser(@CurrentUser() user: any) {
+    return this.usersService.deleteCurrentUser(user.user_id);
+  }
+
+  @Delete('delete-student/:id')
+  @ApiOperation({ summary: 'Delete student (Teacher only)' })
+  @ApiParam({
+    name: 'id',
+    description: 'Student user ID',
+    type: 'number',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Student deleted successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Student not found' })
+  deleteStudent(@Param('id') id: string) {
+    return this.usersService.deleteStudent(+id);
   }
 }

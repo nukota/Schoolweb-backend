@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ClassStatus, EnrollmentStatus } from '../../common/enums';
-import { RegistrationSemesterDTO } from 'src/common/dto/registration-semesters.dto';
+import { ClassStatus, Department, EnrollmentStatus } from '../../common/enums';
+import { RegistrationSemesterDTO } from 'src/common/dto/common.dto';
 
 // DTO classes for Registering Classes Page
-export class RegisterClassDto {
+export class RegisterClassDTO {
   @ApiProperty({ example: 1, description: 'Class ID' })
   class_id: number;
 
@@ -19,8 +19,12 @@ export class RegisterClassDto {
   @ApiProperty({ example: 'Dr. Smith', description: 'Teacher name' })
   teacher_name: string;
 
-  @ApiProperty({ example: 'Computer Science', description: 'Department name' })
-  department: string;
+  @ApiProperty({
+    enum: Department,
+    example: Department.COMPUTER_SCIENCE,
+    description: 'Department',
+  })
+  department: Department;
 
   @ApiProperty({
     example: '2024-01-15',
@@ -81,10 +85,10 @@ export class RegisterClassDto {
 
 export class RegistrationClassesDTO {
   @ApiProperty({
-    type: [RegisterClassDto],
+    type: [RegisterClassDTO],
     description: 'Available classes for registration',
   })
-  available_classes: RegisterClassDto[];
+  available_classes: RegisterClassDTO[];
 }
 
 // DTO classes for Academic Results
@@ -98,8 +102,12 @@ export class ClassResultDTO {
   })
   class_name: string;
 
-  @ApiProperty({ example: 'Computer Science', description: 'Department name' })
-  department: string;
+  @ApiProperty({
+    enum: Department,
+    example: Department.COMPUTER_SCIENCE,
+    description: 'Department',
+  })
+  department: Department;
 
   @ApiProperty({ example: 3, description: 'Credit hours' })
   credits: number;

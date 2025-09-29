@@ -102,8 +102,8 @@ export function buildRegistrationSemesters(enrollments: any[]): any[] {
       const semesterCredits = classes.reduce((sum, classItem) => {
         // Only count credits for enrolled or completed classes
         if (
-          classItem.registration_status === 'ENROLLED' ||
-          classItem.registration_status === 'COMPLETED'
+          classItem.registration_status === 'enrolled' ||
+          classItem.registration_status === 'completed'
         ) {
           return sum + classItem.credits;
         }

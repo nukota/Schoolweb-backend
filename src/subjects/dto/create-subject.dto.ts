@@ -2,7 +2,7 @@ import { IsString, IsNumber, IsOptional, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Department } from '../../common/enums';
 
-export class CreateSubjectDto {
+export class CreateSubjectDTO {
   @ApiProperty({
     example: 'Introduction to Programming',
     description: 'Name of the subject',

@@ -1,7 +1,7 @@
 import { IsString, IsNumber, IsOptional, IsDateString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateClassDto {
+export class CreateClassDTO {
   @ApiProperty({
     example: 'CS101.A01',
     description: 'Unique class code',

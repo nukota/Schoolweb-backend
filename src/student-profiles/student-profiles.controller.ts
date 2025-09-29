@@ -6,8 +6,8 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { StudentProfilesService } from './student-profiles.service';
-import { CreateStudentProfileDto } from './dto/create-student-profile.dto';
-import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
+import { CreateStudentProfileDTO } from './dto/create-student-profile.dto';
+import { UpdateStudentProfileDTO } from './dto/update-student-profile.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 
@@ -31,11 +31,11 @@ export class StudentProfilesController {
   @ApiResponse({ status: 409, description: 'Profile already exists' })
   create(
     @CurrentUser() user: any,
-    @Body() createStudentProfileDto: CreateStudentProfileDto,
+    @Body() createStudentProfileDTO: CreateStudentProfileDTO,
   ) {
     return this.studentProfilesService.create(
       user.user_id,
-      createStudentProfileDto,
+      createStudentProfileDTO,
     );
   }
 
@@ -69,11 +69,11 @@ export class StudentProfilesController {
   @ApiResponse({ status: 409, description: 'Email already exists' })
   update(
     @CurrentUser() user: any,
-    @Body() updateStudentProfileDto: UpdateStudentProfileDto,
+    @Body() updateStudentProfileDTO: UpdateStudentProfileDTO,
   ) {
     return this.studentProfilesService.update(
       user.user_id,
-      updateStudentProfileDto,
+      updateStudentProfileDTO,
     );
   }
 }

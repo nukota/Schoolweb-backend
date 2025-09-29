@@ -5,10 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateSubjectDto } from './dto/create-subject.dto';
-import { UpdateSubjectDto } from './dto/update-subject.dto';
+import { CreateSubjectDTO } from './dto/create-subject.dto';
+import { UpdateSubjectDTO } from './dto/update-subject.dto';
 import { Subject } from './entities/subject.entity';
-import { Department } from '../common/enums';
 
 @Injectable()
 export class SubjectsService {
@@ -17,17 +16,17 @@ export class SubjectsService {
     private readonly subjectRepository: Repository<Subject>,
   ) {}
 
-  async create(createSubjectDto: CreateSubjectDto): Promise<Subject> {
+  async create(createSubjectDTO: CreateSubjectDTO): Promise<Subject> {
     // Check if subject code is unique
     const existingSubject = await this.subjectRepository.findOne({
-      where: { subject_code: createSubjectDto.subject_code },
+      where: { subject_code: createSubjectDTO.subject_code },
     });
 
     if (existingSubject) {
       throw new ConflictException('Subject code already exists');
     }
 
-    const subject = this.subjectRepository.create(createSubjectDto);
+    const subject = this.subjectRepository.create(createSubjectDTO);
     return await this.subjectRepository.save(subject);
   }
 
@@ -37,7 +36,7 @@ export class SubjectsService {
     });
   }
 
-  async findOne(id: number): Promise<Subject> {
+  private async findOne(id: number): Promise<Subject> {
     const subject = await this.subjectRepository.findOne({
       where: { subject_id: id },
       relations: ['classes', 'classes.teacher'],
@@ -52,17 +51,17 @@ export class SubjectsService {
 
   async update(
     id: number,
-    updateSubjectDto: UpdateSubjectDto,
+    updateSubjectDTO: UpdateSubjectDTO,
   ): Promise<Subject> {
     const subject = await this.findOne(id);
 
     // Check if subject code is being updated and if it's unique
     if (
-      updateSubjectDto.subject_code &&
-      updateSubjectDto.subject_code !== subject.subject_code
+      updateSubjectDTO.subject_code &&
+      updateSubjectDTO.subject_code !== subject.subject_code
     ) {
       const existingSubject = await this.subjectRepository.findOne({
-        where: { subject_code: updateSubjectDto.subject_code },
+        where: { subject_code: updateSubjectDTO.subject_code },
       });
 
       if (existingSubject) {
@@ -70,7 +69,7 @@ export class SubjectsService {
       }
     }
 
-    Object.assign(subject, updateSubjectDto);
+    Object.assign(subject, updateSubjectDTO);
     return await this.subjectRepository.save(subject);
   }
 

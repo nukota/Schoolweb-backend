@@ -15,7 +15,7 @@ export class StudentProfile {
   user_id: number;
 
   @Column()
-  student_id: number;
+  student_id: string;
 
   @Column({ length: 20, nullable: true })
   phone?: string;

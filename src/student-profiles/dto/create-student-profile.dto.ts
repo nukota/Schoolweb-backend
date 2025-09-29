@@ -8,13 +8,13 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Department } from 'src/common/enums';
 
-export class CreateStudentProfileDto {
+export class CreateStudentProfileDTO {
   @ApiProperty({
     example: 12345,
     description: 'Student ID number',
   })
-  @IsNumber()
-  student_id: number;
+  @IsString()
+  student_id: string;
 
   @ApiProperty({
     example: '+1234567890',

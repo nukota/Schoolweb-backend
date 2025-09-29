@@ -6,8 +6,8 @@ export class TeacherProfileDTO {
   @ApiProperty({ example: 1, description: 'User ID' })
   user_id: number;
 
-  @ApiProperty({ example: 54321, description: 'Teacher ID number' })
-  teacher_id: number;
+  @ApiProperty({ example: '54321', description: 'Teacher ID number' })
+  teacher_id: string;
 
   @ApiProperty({ example: 'Dr. Jane Smith', description: 'Full name' })
   full_name: string;

@@ -15,7 +15,7 @@ export class TeacherProfile {
   user_id: number;
 
   @Column()
-  teacher_id: number;
+  teacher_id: string;
 
   @Column({ type: 'text', nullable: true })
   position?: string;

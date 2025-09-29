@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateTeacherProfileDto } from './dto/create-teacher-profile.dto';
+import { CreateTeacherProfileDTO } from './dto/create-teacher-profile.dto';
 import { TeacherProfile } from './entities/teacher-profile.entity';
-import { StudentProfile } from '../student-profiles/entities/student-profile.entity';
 import { User } from '../users/entities/user.entity';
 import { UserType } from '../common/enums';
 import { TeacherProfileDTO } from './dto/teacher-profile-view.dto';
+import { UpdateTeacherProfileDTO } from './dto/update-teacher-profile.dto';
 
 @Injectable()
 export class TeacherProfilesService {
@@ -23,7 +23,7 @@ export class TeacherProfilesService {
 
   async create(
     userId: number,
-    createTeacherProfileDto: CreateTeacherProfileDto,
+    createTeacherProfileDTO: CreateTeacherProfileDTO,
   ): Promise<TeacherProfile> {
     // Check if user exists and is a teacher
     const user = await this.userRepository.findOne({
@@ -42,7 +42,7 @@ export class TeacherProfilesService {
     }
 
     const teacherProfile = this.teacherProfileRepository.create({
-      ...createTeacherProfileDto,
+      ...createTeacherProfileDTO,
       user_id: userId,
     });
 
@@ -80,8 +80,8 @@ export class TeacherProfilesService {
 
   async update(
     userId: number,
-    updateTeacherProfileDto: import('./dto/update-teacher-profile.dto').UpdateTeacherProfileDto,
-  ): Promise<{ user: Partial<User>; profile: TeacherProfile }> {
+    updateTeacherProfileDTO: UpdateTeacherProfileDTO,
+  ): Promise<TeacherProfileDTO> {
     // Find the user and their teacher profile
     const user = await this.userRepository.findOne({
       where: { user_id: userId, user_type: UserType.TEACHER },
@@ -95,7 +95,7 @@ export class TeacherProfilesService {
       throw new NotFoundException('Teacher profile not found');
     }
 
-    const { email, full_name, ...profileData } = updateTeacherProfileDto;
+    const { email, full_name, ...profileData } = updateTeacherProfileDTO;
 
     // Update user fields if provided
     const userUpdateData: Partial<User> = {};
@@ -129,15 +129,17 @@ export class TeacherProfilesService {
     if (!updatedUser || !updatedUser.teacher_profile) {
       throw new NotFoundException('Failed to retrieve updated teacher data');
     }
+    const profile = updatedUser.teacher_profile;
     return {
-      user: {
-        user_id: updatedUser.user_id,
-        full_name: updatedUser.full_name,
-        email: updatedUser.email,
-        user_type: updatedUser.user_type,
-        created_at: updatedUser.created_at,
-      },
-      profile: updatedUser.teacher_profile,
+      user_id: updatedUser.user_id,
+      teacher_id: profile.teacher_id,
+      full_name: updatedUser.full_name,
+      email: updatedUser.email,
+      position: profile.position,
+      dob: profile.dob?.toString(),
+      avatar_url: profile.avatar_url,
+      department: profile.department,
+      hire_date: profile.hire_date?.toString(),
     };
   }
 }

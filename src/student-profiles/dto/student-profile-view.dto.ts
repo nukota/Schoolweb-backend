@@ -6,8 +6,8 @@ export class StudentProfileDTO {
   @ApiProperty({ example: 1, description: 'User ID' })
   user_id: number;
 
-  @ApiProperty({ example: 12345, description: 'Student ID number' })
-  student_id: number;
+  @ApiProperty({ example: 'A12345', description: 'Student ID number' })
+  student_id: string;
 
   @ApiProperty({ example: 'John Doe', description: 'Full name' })
   full_name: string;

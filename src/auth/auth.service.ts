@@ -12,10 +12,11 @@ import { User } from '../users/entities/user.entity';
 import { StudentProfile } from '../student-profiles/entities/student-profile.entity';
 import { TeacherProfile } from '../teacher-profiles/entities/teacher-profile.entity';
 import {
-  SignupDto,
-  LoginDto,
-  AuthResponseDto,
+  SignupDTO,
+  LoginDTO,
+  AuthResponseDTO,
   JwtPayload,
+  MeUserDTO,
 } from './dto/auth.dto';
 import { UserType } from '../common/enums';
 
@@ -24,15 +25,11 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(StudentProfile)
-    private readonly studentProfileRepository: Repository<StudentProfile>,
-    @InjectRepository(TeacherProfile)
-    private readonly teacherProfileRepository: Repository<TeacherProfile>,
     private readonly jwtService: JwtService,
   ) {}
 
-  async signup(signupDto: SignupDto): Promise<AuthResponseDto> {
-    const { email, full_name, password, user_type } = signupDto;
+  async signup(signupDTO: SignupDTO): Promise<AuthResponseDTO> {
+    const { email, full_name, password, user_type } = signupDTO;
 
     // Check if email already exists
     const existingUser = await this.userRepository.findOne({
@@ -80,8 +77,8 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto): Promise<AuthResponseDto> {
-    const { email, password } = loginDto;
+  async login(loginDTO: LoginDTO): Promise<AuthResponseDTO> {
+    const { email, password } = loginDTO;
 
     // Find user by email
     const user = await this.userRepository.findOne({
@@ -125,6 +122,41 @@ export class AuthService {
         user_type: user.user_type,
         has_profile: hasProfile,
       },
+    };
+  }
+
+  async getMe(userId: number): Promise<MeUserDTO> {
+    // Find user by ID
+    const user = await this.userRepository.findOne({
+      where: { user_id: userId },
+      relations: ['student_profile', 'teacher_profile'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check if user has profile
+    const hasProfile =
+      user.user_type === UserType.STUDENT
+        ? !!user.student_profile
+        : !!user.teacher_profile;
+
+    // Get avatar_url from the correct profile
+    let avatar_url: string | undefined = undefined;
+    if (user.user_type === UserType.STUDENT && user.student_profile) {
+      avatar_url = user.student_profile.avatar_url;
+    } else if (user.user_type === UserType.TEACHER && user.teacher_profile) {
+      avatar_url = user.teacher_profile.avatar_url;
+    }
+
+    return {
+      user_id: user.user_id,
+      email: user.email,
+      full_name: user.full_name,
+      user_type: user.user_type,
+      has_profile: hasProfile,
+      avatar_url,
     };
   }
 }

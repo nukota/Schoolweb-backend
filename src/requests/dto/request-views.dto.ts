@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RequestStatus, RequestType } from '../../common/enums';
 
 //DTO for Requests Page
@@ -52,11 +52,11 @@ export class RequestDTO {
   })
   reviewed_date?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'Request message from student',
-    description: 'Request message',
+    description: 'Optional request message',
   })
-  message: string;
+  message?: string;
 
   @ApiProperty({
     example: 'https://example.com/avatar.jpg',

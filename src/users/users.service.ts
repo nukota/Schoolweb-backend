@@ -8,15 +8,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { StudentProfile } from '../student-profiles/entities/student-profile.entity';
+import { TeacherProfile } from '../teacher-profiles/entities/teacher-profile.entity';
 import { Enrollment } from '../enrollments/entities/enrollment.entity';
-import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ResetPasswordDTO } from './dto/reset-password.dto';
 import {
   StudentsPageDTO,
   StudentDetailsDTO,
   StudentListItemDTO,
+  TeachersListDTO,
+  TeacherListItemDTO,
 } from './dto/user-views.dto';
-import { CreateStudentDto } from '../users/dto/create-student.dto';
-import { UpdateStudentDto } from '../users/dto/update-student.dto';
+import { CreateStudentDTO } from '../users/dto/create-student.dto';
+import { UpdateStudentDTO } from '../users/dto/update-student.dto';
 import { UserType, EnrollmentStatus } from '../common/enums';
 import { getAverageScore, buildRegistrationSemesters } from '../common/utils';
 import * as bcrypt from 'bcrypt';
@@ -30,11 +33,13 @@ export class UsersService {
     private readonly enrollmentRepository: Repository<Enrollment>,
     @InjectRepository(StudentProfile)
     private readonly studentProfileRepository: Repository<StudentProfile>,
+    @InjectRepository(TeacherProfile)
+    private readonly teacherProfileRepository: Repository<TeacherProfile>,
   ) {}
 
   async resetPassword(
     userId: number,
-    resetPasswordDto: ResetPasswordDto,
+    resetPasswordDTO: ResetPasswordDTO,
   ): Promise<{ message: string }> {
     // Find the user
     const user = await this.userRepository.findOne({
@@ -47,7 +52,7 @@ export class UsersService {
 
     // Verify old password
     const isOldPasswordValid = await bcrypt.compare(
-      resetPasswordDto.old_password,
+      resetPasswordDTO.old_password,
       user.password,
     );
 
@@ -58,7 +63,7 @@ export class UsersService {
     // Hash new password
     const saltRounds = 10;
     const hashedNewPassword = await bcrypt.hash(
-      resetPasswordDto.new_password,
+      resetPasswordDTO.new_password,
       saltRounds,
     );
 
@@ -113,6 +118,24 @@ export class UsersService {
     return { students: studentList };
   }
 
+  async getTeachersList(): Promise<TeachersListDTO> {
+    // Get all teachers with their profiles
+    const teachers = await this.userRepository.find({
+      where: { user_type: UserType.TEACHER },
+      relations: ['teacher_profile'],
+    });
+
+    const teacherList: TeacherListItemDTO[] = teachers
+      .filter((user) => user.teacher_profile) // Only include teachers with profiles
+      .map((user) => ({
+        user_id: user.user_id,
+        teacher_id: user.teacher_profile!.teacher_id,
+        full_name: user.full_name,
+      }));
+
+    return { teachers: teacherList };
+  }
+
   async getStudentDetails(userId: number): Promise<StudentDetailsDTO> {
     const user = await this.userRepository.findOne({
       where: { user_id: userId, user_type: UserType.STUDENT },
@@ -134,12 +157,23 @@ export class UsersService {
     let gpa = 0;
     let total_credits = 0;
     let completed_classes = 0;
-    const total_classes = enrollments.length;
+    const total_classes = enrollments.filter(
+      (e) =>
+        e.status === EnrollmentStatus.ENROLLED ||
+        e.status === EnrollmentStatus.COMPLETED,
+    ).length;
     let total_semesters = 0;
 
     if (enrollments.length > 0) {
-      // Calculate GPA
-      const scores = enrollments
+      // Filter to only include enrolled and completed classes for calculations
+      const activeEnrollments = enrollments.filter(
+        (e) =>
+          e.status === EnrollmentStatus.ENROLLED ||
+          e.status === EnrollmentStatus.COMPLETED,
+      );
+
+      // Calculate GPA from active enrollments only
+      const scores = activeEnrollments
         .map((e) => getAverageScore(e.scores))
         .filter((score) => score > 0);
 
@@ -149,27 +183,35 @@ export class UsersService {
           : 0;
 
       // Count completed classes
-      completed_classes = enrollments.filter(
+      completed_classes = activeEnrollments.filter(
         (e) => e.status === EnrollmentStatus.COMPLETED,
       ).length;
 
       // Calculate credits (assuming 3 credits per completed class)
       total_credits = completed_classes * 3;
 
-      // Count unique semesters
+      // Count unique semesters from active enrollments
       const semesters = new Set(
-        enrollments.map((e) => e.class?.semester).filter(Boolean),
+        activeEnrollments.map((e) => e.class?.semester).filter(Boolean),
       );
       total_semesters = semesters.size;
     }
 
-    // Build registration history using shared function
-    const registration_history = buildRegistrationSemesters(enrollments);
+    // Build registration history using shared function (only active enrollments)
+    const activeEnrollments = enrollments.filter(
+      (e) =>
+        e.status === EnrollmentStatus.ENROLLED ||
+        e.status === EnrollmentStatus.COMPLETED,
+    );
+    const registration_history = buildRegistrationSemesters(activeEnrollments);
 
     return {
       user_id: user.user_id,
       full_name: user.full_name,
       email: user.email,
+      dob: profile.dob
+        ? new Date(profile.dob).toISOString().split('T')[0]
+        : undefined,
       phone: profile.phone || '',
       gpa: Math.round(gpa * 100) / 100,
       avatar: profile.avatar_url,
@@ -185,11 +227,11 @@ export class UsersService {
   }
 
   async createStudent(
-    createStudentDto: CreateStudentDto,
-  ): Promise<{ message: string; user: any; studentProfile: StudentProfile }> {
+    createStudentDTO: CreateStudentDTO,
+  ): Promise<{ user: any; studentProfile: StudentProfile }> {
     // Check if email already exists
     const existingUser = await this.userRepository.findOne({
-      where: { email: createStudentDto.email },
+      where: { email: createStudentDTO.email },
     });
 
     if (existingUser) {
@@ -199,14 +241,14 @@ export class UsersService {
     // Hash password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(
-      createStudentDto.password,
+      createStudentDTO.password,
       saltRounds,
     );
 
     // Create user
     const user = this.userRepository.create({
-      full_name: createStudentDto.full_name,
-      email: createStudentDto.email,
+      full_name: createStudentDTO.full_name,
+      email: createStudentDTO.email,
       password: hashedPassword,
       user_type: UserType.STUDENT,
     });
@@ -216,19 +258,18 @@ export class UsersService {
     // Create student profile
     const studentProfile = this.studentProfileRepository.create({
       user_id: savedUser.user_id,
-      student_id: createStudentDto.student_id,
-      phone: createStudentDto.phone,
-      dob: createStudentDto.dob,
-      avatar_url: createStudentDto.avatar_url,
-      department: createStudentDto.department,
-      enrollment_year: createStudentDto.enrollment_year,
+      student_id: createStudentDTO.student_id,
+      phone: createStudentDTO.phone,
+      dob: createStudentDTO.dob,
+      avatar_url: createStudentDTO.avatar_url,
+      department: createStudentDTO.department,
+      enrollment_year: createStudentDTO.enrollment_year,
     });
 
     const savedStudentProfile =
       await this.studentProfileRepository.save(studentProfile);
 
     return {
-      message: 'Student created successfully',
       user: {
         user_id: savedUser.user_id,
         full_name: savedUser.full_name,
@@ -242,8 +283,8 @@ export class UsersService {
 
   async updateStudent(
     studentId: number,
-    updateStudentDto: UpdateStudentDto,
-  ): Promise<{ message: string; user: any; studentProfile: StudentProfile }> {
+    updateStudentDTO: UpdateStudentDTO,
+  ): Promise<{ user: any; studentProfile: StudentProfile }> {
     // Find the user and their student profile
     const user = await this.userRepository.findOne({
       where: { user_id: studentId },
@@ -259,9 +300,9 @@ export class UsersService {
     }
 
     // Check if email already exists (if email is being updated)
-    if (updateStudentDto.email && updateStudentDto.email !== user.email) {
+    if (updateStudentDTO.email && updateStudentDTO.email !== user.email) {
       const existingUser = await this.userRepository.findOne({
-        where: { email: updateStudentDto.email },
+        where: { email: updateStudentDTO.email },
       });
 
       if (existingUser) {
@@ -271,32 +312,32 @@ export class UsersService {
 
     // Update user fields
     const userUpdateData: any = {};
-    if (updateStudentDto.full_name)
-      userUpdateData.full_name = updateStudentDto.full_name;
-    if (updateStudentDto.email) userUpdateData.email = updateStudentDto.email;
+    if (updateStudentDTO.full_name)
+      userUpdateData.full_name = updateStudentDTO.full_name;
+    if (updateStudentDTO.email) userUpdateData.email = updateStudentDTO.email;
 
-    if (updateStudentDto.password) {
+    if (updateStudentDTO.password) {
       const saltRounds = 10;
       userUpdateData.password = await bcrypt.hash(
-        updateStudentDto.password,
+        updateStudentDTO.password,
         saltRounds,
       );
     }
 
     // Update student profile fields
     const profileUpdateData: any = {};
-    if (updateStudentDto.student_id !== undefined)
-      profileUpdateData.student_id = updateStudentDto.student_id;
-    if (updateStudentDto.phone !== undefined)
-      profileUpdateData.phone = updateStudentDto.phone;
-    if (updateStudentDto.dob !== undefined)
-      profileUpdateData.dob = updateStudentDto.dob;
-    if (updateStudentDto.avatar_url !== undefined)
-      profileUpdateData.avatar_url = updateStudentDto.avatar_url;
-    if (updateStudentDto.department !== undefined)
-      profileUpdateData.department = updateStudentDto.department;
-    if (updateStudentDto.enrollment_year !== undefined)
-      profileUpdateData.enrollment_year = updateStudentDto.enrollment_year;
+    if (updateStudentDTO.student_id !== undefined)
+      profileUpdateData.student_id = updateStudentDTO.student_id;
+    if (updateStudentDTO.phone !== undefined)
+      profileUpdateData.phone = updateStudentDTO.phone;
+    if (updateStudentDTO.dob !== undefined)
+      profileUpdateData.dob = updateStudentDTO.dob;
+    if (updateStudentDTO.avatar_url !== undefined)
+      profileUpdateData.avatar_url = updateStudentDTO.avatar_url;
+    if (updateStudentDTO.department !== undefined)
+      profileUpdateData.department = updateStudentDTO.department;
+    if (updateStudentDTO.enrollment_year !== undefined)
+      profileUpdateData.enrollment_year = updateStudentDTO.enrollment_year;
 
     // Update user if there are changes
     if (Object.keys(userUpdateData).length > 0) {
@@ -322,7 +363,6 @@ export class UsersService {
     }
 
     return {
-      message: 'Student updated successfully',
       user: {
         user_id: updatedUser.user_id,
         full_name: updatedUser.full_name,
@@ -331,6 +371,58 @@ export class UsersService {
         created_at: updatedUser.created_at,
       },
       studentProfile: updatedUser.student_profile,
+    };
+  }
+
+  async deleteCurrentUser(userId: number): Promise<{ message: string }> {
+    // Find the user with their profile
+    const user = await this.userRepository.findOne({
+      where: { user_id: userId },
+      relations: ['student_profile', 'teacher_profile'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Delete profile based on user type
+    if (user.user_type === UserType.STUDENT && user.student_profile) {
+      await this.studentProfileRepository.delete(user.student_profile.user_id);
+    } else if (user.user_type === UserType.TEACHER && user.teacher_profile) {
+      await this.teacherProfileRepository.delete(user.teacher_profile.user_id);
+    }
+
+    // Delete the user (this will cascade delete related data due to foreign keys)
+    await this.userRepository.delete(userId);
+
+    return {
+      message: 'Account deleted successfully',
+    };
+  }
+
+  async deleteStudent(studentId: number): Promise<{ message: string }> {
+    // Find the student user with their profile
+    const user = await this.userRepository.findOne({
+      where: { user_id: studentId, user_type: UserType.STUDENT },
+      relations: ['student_profile'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (!user.student_profile) {
+      throw new NotFoundException('Student profile not found');
+    }
+
+    // Delete student profile first
+    await this.studentProfileRepository.delete(user.student_profile.user_id);
+
+    // Delete the user (this will cascade delete enrollments and requests due to foreign keys)
+    await this.userRepository.delete(studentId);
+
+    return {
+      message: 'Student deleted successfully',
     };
   }
 }

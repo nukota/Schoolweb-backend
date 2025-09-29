@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateRequestDto } from './dto/create-request.dto';
+import { CreateRequestDTO } from './dto/create-request.dto';
 import { RequestsPageDTO } from './dto/request-views.dto';
 import { Request } from './entities/request.entity';
 import { User } from '../users/entities/user.entity';
@@ -26,10 +26,13 @@ export class RequestsService {
     private readonly enrollmentRepository: Repository<Enrollment>,
   ) {}
 
-  async create(createRequestDto: CreateRequestDto): Promise<Request> {
+  async create(
+    studentId: number,
+    createRequestDTO: CreateRequestDTO,
+  ): Promise<Request> {
     // Verify student exists
     const student = await this.userRepository.findOne({
-      where: { user_id: createRequestDto.student_id },
+      where: { user_id: studentId },
     });
 
     if (!student) {
@@ -38,7 +41,7 @@ export class RequestsService {
 
     // Verify class exists
     const classEntity = await this.classRepository.findOne({
-      where: { class_id: createRequestDto.class_id },
+      where: { class_id: createRequestDTO.class_id },
     });
 
     if (!classEntity) {
@@ -48,8 +51,8 @@ export class RequestsService {
     // Check if there's already a pending request for this student and class
     const existingRequest = await this.requestRepository.findOne({
       where: {
-        student_id: createRequestDto.student_id,
-        class_id: createRequestDto.class_id,
+        student_id: studentId,
+        class_id: createRequestDTO.class_id,
         status: RequestStatus.PENDING,
       },
     });
@@ -60,23 +63,30 @@ export class RequestsService {
       );
     }
 
-    const request = this.requestRepository.create(createRequestDto);
+    const request = this.requestRepository.create({
+      student_id: studentId,
+      class_id: createRequestDTO.class_id,
+      request_type: createRequestDTO.request_type,
+      message: createRequestDTO.message,
+    });
     return await this.requestRepository.save(request);
   }
 
-  async getAllRequests(): Promise<RequestsPageDTO> {
-    const requests = await this.requestRepository.find({
-      relations: [
-        'student',
-        'student.student_profile',
-        'class',
-        'class.subject',
-      ],
-    });
+  async getAllRequests(teacherId: number): Promise<RequestsPageDTO> {
+    const requests = await this.requestRepository
+      .createQueryBuilder('request')
+      .leftJoinAndSelect('request.student', 'student')
+      .leftJoinAndSelect('student.student_profile', 'student_profile')
+      .leftJoinAndSelect('request.class', 'class')
+      .leftJoinAndSelect('class.subject', 'subject')
+      .where('class.teacher_id = :teacherId', { teacherId })
+      .getMany();
 
     const mappedRequests = requests.map((request) => ({
       request_id: request.request_id,
-      student_id: request.student_id.toString(),
+      student_id:
+        request.student.student_profile?.student_id ||
+        request.student_id.toString(),
       student_name: request.student.full_name,
       email: request.student.email,
       phone: request.student.student_profile?.phone || '',
