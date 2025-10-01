@@ -9,7 +9,6 @@ import {
   UseGuards,
   Request,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,15 +18,15 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { ClassesService } from './classes.service';
 import { CreateClassDTO } from './dto/create-class.dto';
 import { UpdateClassDTO } from './dto/update-class.dto';
 import {
   TeacherClassesDTO,
-  TeacherClassDetailsDTO,
   StudentClassesDTO,
   StudentScheduleDTO,
   TeacherScheduleDTO,
+  AdminClassesDTO,
+  ClassDetailsDTO,
 } from './dto/class-views.dto';
 import {
   AddStudentsToClassDTO,
@@ -36,69 +35,75 @@ import {
   ClassManagementResponseDTO,
 } from './dto/class-management.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { ClassesAdminService } from './services/classes-admin.service';
+import { ClassesTeacherService } from './services/classes-teacher.service';
+import { ClassesStudentService } from './services/classes-student.service';
 
 @ApiTags('classes')
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
 @Controller('classes')
 export class ClassesController {
-  constructor(private readonly classesService: ClassesService) {}
+  constructor(
+    private readonly classesAdminService: ClassesAdminService,
+    private readonly classesTeacherService: ClassesTeacherService,
+    private readonly classesStudentService: ClassesStudentService,
+  ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new class (Teacher only)' })
+  @ApiOperation({ summary: 'Create a new class (Admin only)' })
   @ApiResponse({ status: 201, description: 'Class created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   create(@Body() createClassDTO: CreateClassDTO) {
-    return this.classesService.create(createClassDTO);
+    return this.classesAdminService.create(createClassDTO);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update class by ID (Teacher only)' })
+  @ApiOperation({ summary: 'Update class by ID (Admin only)' })
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({ status: 200, description: 'Class updated successfully' })
   @ApiResponse({ status: 404, description: 'Class not found' })
   update(@Param('id') id: string, @Body() updateClassDTO: UpdateClassDTO) {
-    return this.classesService.update(+id, updateClassDTO);
+    return this.classesAdminService.update(+id, updateClassDTO);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete class by ID (Teacher only)' })
+  @ApiOperation({ summary: 'Delete class by ID (Admin only)' })
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({ status: 200, description: 'Class deleted successfully' })
   @ApiResponse({ status: 404, description: 'Class not found' })
   remove(@Param('id') id: string) {
-    return this.classesService.remove(+id);
+    return this.classesAdminService.remove(+id);
   }
 
-  @Get('teacher-classes')
-  @ApiOperation({ summary: 'Get all classes for a teacher (Teacher only)' })
+  @Get('all-classes')
+  @ApiOperation({ summary: 'Get all classes (Admin only)' })
   @ApiResponse({
     status: 200,
-    description: 'Teacher classes retrieved successfully',
-    type: TeacherClassesDTO,
+    description: 'All classes retrieved successfully',
+    type: AdminClassesDTO,
   })
-  getTeacherClasses(@Request() req): Promise<TeacherClassesDTO> {
-    const teacherId = req.user.user_id;
-    return this.classesService.getTeacherClasses(teacherId);
+  getAllClasses(): Promise<AdminClassesDTO> {
+    return this.classesAdminService.getAllClasses();
   }
 
-  @Get('teacher-class/:id')
+  @Get('class-details/:id')
   @ApiOperation({
-    summary: 'Get detailed class information for teacher (Teacher only)',
+    summary: 'Get detailed class information (Teacher only)',
   })
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({
     status: 200,
-    description: 'Teacher class details retrieved successfully',
-    type: TeacherClassDetailsDTO,
+    description: 'Class details retrieved successfully',
+    type: ClassDetailsDTO,
   })
   @ApiResponse({ status: 404, description: 'Class not found' })
-  getTeacherClassDetails(
+  getClassDetails(
     @Request() req,
     @Param('id') id: string,
-  ): Promise<TeacherClassDetailsDTO> {
+  ): Promise<ClassDetailsDTO> {
     const teacherId = req.user.user_id;
-    return this.classesService.getTeacherClassDetails(+id, teacherId);
+    return this.classesTeacherService.getClassDetails(+id, teacherId);
   }
 
   @Get('student-classes')
@@ -110,7 +115,7 @@ export class ClassesController {
   })
   getStudentClasses(@Request() req): Promise<StudentClassesDTO> {
     const studentId = req.user.user_id;
-    return this.classesService.getStudentClasses(studentId);
+    return this.classesStudentService.getStudentClasses(studentId);
   }
 
   @Get('student-schedule')
@@ -144,11 +149,23 @@ export class ClassesController {
     @Query('end_date') endDate: string,
   ): Promise<StudentScheduleDTO> {
     const studentId = req.user.user_id;
-    return this.classesService.getStudentSchedule(
+    return this.classesStudentService.getStudentSchedule(
       studentId,
       startDate,
       endDate,
     );
+  }
+
+  @Get('teacher-classes')
+  @ApiOperation({ summary: 'Get all classes for a teacher (Teacher only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Teacher classes retrieved successfully',
+    type: TeacherClassesDTO,
+  })
+  getTeacherClasses(@Request() req): Promise<TeacherClassesDTO> {
+    const teacherId = req.user.user_id;
+    return this.classesTeacherService.getTeacherClasses(teacherId);
   }
 
   @Get('teacher-schedule')
@@ -182,7 +199,7 @@ export class ClassesController {
     @Query('end_date') endDate: string,
   ): Promise<TeacherScheduleDTO> {
     const teacherId = req.user.user_id;
-    return this.classesService.getTeacherSchedule(
+    return this.classesTeacherService.getTeacherSchedule(
       teacherId,
       startDate,
       endDate,
@@ -190,7 +207,7 @@ export class ClassesController {
   }
 
   @Post(':id/add-students')
-  @ApiOperation({ summary: 'Add students to class (Teacher only)' })
+  @ApiOperation({ summary: 'Add students to class (Admin only)' })
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({
     status: 200,
@@ -203,11 +220,11 @@ export class ClassesController {
     @Param('id') id: string,
     @Body() addStudentsDTO: AddStudentsToClassDTO,
   ): Promise<ClassManagementResponseDTO> {
-    return this.classesService.addStudentsToClass(+id, addStudentsDTO);
+    return this.classesAdminService.addStudentsToClass(+id, addStudentsDTO);
   }
 
   @Delete(':id/remove-students')
-  @ApiOperation({ summary: 'Remove students from class (Teacher only)' })
+  @ApiOperation({ summary: 'Remove students from class (Admin only)' })
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({
     status: 200,
@@ -220,7 +237,10 @@ export class ClassesController {
     @Param('id') id: string,
     @Body() removeStudentsDTO: RemoveStudentsFromClassDTO,
   ): Promise<ClassManagementResponseDTO> {
-    return this.classesService.removeStudentsFromClass(+id, removeStudentsDTO);
+    return this.classesAdminService.removeStudentsFromClass(
+      +id,
+      removeStudentsDTO,
+    );
   }
 
   @Patch(':id/edit-scores')
@@ -237,11 +257,11 @@ export class ClassesController {
     @Param('id') id: string,
     @Body() editScoresDTO: EditStudentScoresDTO,
   ): Promise<ClassManagementResponseDTO> {
-    return this.classesService.editStudentScores(+id, editScoresDTO);
+    return this.classesTeacherService.editStudentScores(+id, editScoresDTO);
   }
 
   @Patch(':id/mark-complete')
-  @ApiOperation({ summary: 'Mark class as completed (Teacher only)' })
+  @ApiOperation({ summary: 'Mark class as completed (Admin only)' })
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({
     status: 200,
@@ -255,6 +275,6 @@ export class ClassesController {
     @Request() req,
   ): Promise<ClassManagementResponseDTO> {
     const teacherId = req.user.user_id;
-    return this.classesService.markClassAsComplete(+id, teacherId);
+    return this.classesAdminService.markClassAsComplete(+id, teacherId);
   }
 }

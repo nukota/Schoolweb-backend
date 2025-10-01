@@ -37,7 +37,7 @@ export class RequestsController {
 
   @Get('all')
   @ApiOperation({
-    summary: 'Get all requests for requests page (Teacher only)',
+    summary: 'Get all requests for requests page (Admin only)',
   })
   @ApiResponse({
     status: 200,
@@ -51,7 +51,7 @@ export class RequestsController {
 
   @Post('approve/:id')
   @ApiOperation({
-    summary: 'Approve request and handle enrollment (Teacher only)',
+    summary: 'Approve request and handle enrollment (Admin only)',
   })
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiResponse({ status: 200, description: 'Request approved successfully' })
@@ -65,7 +65,7 @@ export class RequestsController {
   }
 
   @Post('reject/:id')
-  @ApiOperation({ summary: 'Reject request (Teacher only)' })
+  @ApiOperation({ summary: 'Reject request (Admin only)' })
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiResponse({ status: 200, description: 'Request rejected successfully' })
   @ApiResponse({ status: 404, description: 'Request not found' })
@@ -75,7 +75,7 @@ export class RequestsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete request by ID (Both)' })
+  @ApiOperation({ summary: 'Delete request by ID (Admin only)' })
   @ApiParam({ name: 'id', description: 'Request ID' })
   @ApiResponse({ status: 200, description: 'Request deleted successfully' })
   @ApiResponse({ status: 404, description: 'Request not found' })

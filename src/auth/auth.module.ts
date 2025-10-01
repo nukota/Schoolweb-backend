@@ -7,10 +7,11 @@ import { User } from '../users/entities/user.entity';
 import { AuthGuard } from './guards/auth.guard';
 import { TeacherProfile } from 'src/teacher-profiles/entities/teacher-profile.entity';
 import { StudentProfile } from 'src/student-profiles/entities/student-profile.entity';
+import { Admin } from '../admin/entities/admin.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, StudentProfile, TeacherProfile]),
+    TypeOrmModule.forFeature([User, StudentProfile, TeacherProfile, Admin]),
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',
       signOptions: { expiresIn: '24h' },

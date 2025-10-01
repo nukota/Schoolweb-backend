@@ -28,7 +28,7 @@ export class SubjectsController {
   constructor(private readonly subjectsService: SubjectsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new subject (Teacher only)' })
+  @ApiOperation({ summary: 'Create a new subject (Admin only)' })
   @ApiResponse({ status: 201, description: 'Subject created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   create(@Body() createSubjectDTO: CreateSubjectDTO) {
@@ -36,14 +36,14 @@ export class SubjectsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all subjects (Teacher only)' })
+  @ApiOperation({ summary: 'Get all subjects (Admin and Teacher)' })
   @ApiResponse({ status: 200, description: 'Subjects retrieved successfully' })
   findAll() {
     return this.subjectsService.findAll();
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update subject by ID (Teacher only)' })
+  @ApiOperation({ summary: 'Update subject by ID (Admin only)' })
   @ApiParam({ name: 'id', description: 'Subject ID' })
   @ApiResponse({ status: 200, description: 'Subject updated successfully' })
   @ApiResponse({ status: 404, description: 'Subject not found' })
@@ -52,7 +52,7 @@ export class SubjectsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete subject by ID (Teacher only)' })
+  @ApiOperation({ summary: 'Delete subject by ID (Admin only)' })
   @ApiParam({ name: 'id', description: 'Subject ID' })
   @ApiResponse({ status: 200, description: 'Subject deleted successfully' })
   @ApiResponse({ status: 404, description: 'Subject not found' })

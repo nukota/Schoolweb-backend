@@ -3,6 +3,12 @@ export enum UserType {
   TEACHER = 'teacher',
 }
 
+export enum UserRole {
+  STUDENT = 'student',
+  TEACHER = 'teacher',
+  ADMIN = 'admin',
+}
+
 export enum Department {
   COMPUTER_SCIENCE = 'Computer Science',
   INFORMATION_TECHNOLOGY = 'Information Technology',

@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ClassesService } from './classes.service';
 import { ClassesController } from './classes.controller';
+import { ClassesAdminService } from './services/classes-admin.service';
+import { ClassesTeacherService } from './services/classes-teacher.service';
+import { ClassesStudentService } from './services/classes-student.service';
 import { Class } from './entities/class.entity';
 import { Subject } from '../subjects/entities/subject.entity';
 import { User } from '../users/entities/user.entity';
@@ -23,7 +25,11 @@ import { AuthModule } from '../auth/auth.module';
     AuthModule,
   ],
   controllers: [ClassesController],
-  providers: [ClassesService],
-  exports: [ClassesService],
+  providers: [
+    ClassesAdminService,
+    ClassesTeacherService,
+    ClassesStudentService,
+  ],
+  exports: [],
 })
 export class ClassesModule {}

@@ -5,10 +5,13 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { DashboardService } from './dashboard.service';
+import { DashboardStudentService } from './services/dashboard-student.service';
+import { DashboardTeacherService } from './services/dashboard-teacher.service';
+import { DashboardAdminService } from './services/dashboard-admin.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { TeacherDashboardDTO } from './dto/teacher-dashboard.dto';
 import { StudentDashboardDTO } from './dto/student-dashboard.dto';
+import { AdminDashboardDTO } from './dto/admin-dashboard.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @ApiTags('dashboard')
@@ -16,7 +19,11 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 @UseGuards(AuthGuard)
 @Controller('dashboard')
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(
+    private readonly dashboardStudentService: DashboardStudentService,
+    private readonly dashboardTeacherService: DashboardTeacherService,
+    private readonly dashboardAdminService: DashboardAdminService,
+  ) {}
 
   @Get('student')
   @ApiOperation({ summary: 'Get student dashboard data (Student only)' })
@@ -29,7 +36,7 @@ export class DashboardController {
   async getStudentDashboard(
     @CurrentUser() user: any,
   ): Promise<StudentDashboardDTO> {
-    return this.dashboardService.getStudentDashboard(user.user_id);
+    return this.dashboardStudentService.getStudentDashboard(user.user_id);
   }
 
   @Get('teacher')
@@ -43,6 +50,18 @@ export class DashboardController {
   async getTeacherDashboard(
     @CurrentUser() user: any,
   ): Promise<TeacherDashboardDTO> {
-    return this.dashboardService.getTeacherDashboard(user.user_id);
+    return this.dashboardTeacherService.getTeacherDashboard(user.user_id);
+  }
+
+  @Get('admin')
+  @ApiOperation({ summary: 'Get admin dashboard data (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Admin dashboard data retrieved successfully',
+    type: AdminDashboardDTO,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getAdminDashboard(): Promise<AdminDashboardDTO> {
+    return this.dashboardAdminService.getAdminDashboard();
   }
 }

@@ -10,16 +10,19 @@ import { User } from './entities/user.entity';
 import { StudentProfile } from '../student-profiles/entities/student-profile.entity';
 import { TeacherProfile } from '../teacher-profiles/entities/teacher-profile.entity';
 import { Enrollment } from '../enrollments/entities/enrollment.entity';
+import { Class } from '../classes/entities/class.entity';
 import { ResetPasswordDTO } from './dto/reset-password.dto';
 import {
   StudentsPageDTO,
   StudentDetailsDTO,
   StudentListItemDTO,
-  TeachersListDTO,
+  TeachersPageDTO,
   TeacherListItemDTO,
 } from './dto/user-views.dto';
 import { CreateStudentDTO } from '../users/dto/create-student.dto';
 import { UpdateStudentDTO } from '../users/dto/update-student.dto';
+import { CreateTeacherDTO } from '../users/dto/create-teacher.dto';
+import { UpdateTeacherDTO } from '../users/dto/update-teacher.dto';
 import { UserType, EnrollmentStatus } from '../common/enums';
 import { getAverageScore, buildRegistrationSemesters } from '../common/utils';
 import * as bcrypt from 'bcrypt';
@@ -35,6 +38,8 @@ export class UsersService {
     private readonly studentProfileRepository: Repository<StudentProfile>,
     @InjectRepository(TeacherProfile)
     private readonly teacherProfileRepository: Repository<TeacherProfile>,
+    @InjectRepository(Class)
+    private readonly classRepository: Repository<Class>,
   ) {}
 
   async resetPassword(
@@ -106,11 +111,11 @@ export class UsersService {
 
       studentList.push({
         user_id: user.user_id,
-        name: user.full_name,
+        full_name: user.full_name,
         email: user.email,
         phone: profile?.phone || '',
         gpa: Math.round(gpa * 100) / 100,
-        avatar: profile?.avatar_url,
+        avatar_url: profile?.avatar_url,
         student_id: profile?.student_id?.toString() || '',
       });
     }
@@ -118,20 +123,36 @@ export class UsersService {
     return { students: studentList };
   }
 
-  async getTeachersList(): Promise<TeachersListDTO> {
+  async getTeachersPage(): Promise<TeachersPageDTO> {
     // Get all teachers with their profiles
     const teachers = await this.userRepository.find({
       where: { user_type: UserType.TEACHER },
       relations: ['teacher_profile'],
     });
 
-    const teacherList: TeacherListItemDTO[] = teachers
-      .filter((user) => user.teacher_profile) // Only include teachers with profiles
-      .map((user) => ({
+    const teacherList: TeacherListItemDTO[] = [];
+
+    for (const user of teachers) {
+      const profile = user.teacher_profile;
+
+      if (!profile) continue; // Skip teachers without profiles
+
+      // Count total classes taught by this teacher
+      const totalClasses = await this.classRepository.count({
+        where: { teacher_id: user.user_id },
+      });
+
+      teacherList.push({
         user_id: user.user_id,
-        teacher_id: user.teacher_profile!.teacher_id,
         full_name: user.full_name,
-      }));
+        email: user.email,
+        teacher_id: profile.teacher_id?.toString() || '',
+        department: profile.department,
+        position: profile.position || '',
+        avatar_url: profile.avatar_url,
+        total_classes: totalClasses,
+      });
+    }
 
     return { teachers: teacherList };
   }
@@ -214,7 +235,7 @@ export class UsersService {
         : undefined,
       phone: profile.phone || '',
       gpa: Math.round(gpa * 100) / 100,
-      avatar: profile.avatar_url,
+      avatar_url: profile.avatar_url,
       student_id: profile.student_id?.toString() || '',
       department: profile.department || '',
       enrollment_year: profile.enrollment_year || 0,
@@ -374,32 +395,6 @@ export class UsersService {
     };
   }
 
-  async deleteCurrentUser(userId: number): Promise<{ message: string }> {
-    // Find the user with their profile
-    const user = await this.userRepository.findOne({
-      where: { user_id: userId },
-      relations: ['student_profile', 'teacher_profile'],
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // Delete profile based on user type
-    if (user.user_type === UserType.STUDENT && user.student_profile) {
-      await this.studentProfileRepository.delete(user.student_profile.user_id);
-    } else if (user.user_type === UserType.TEACHER && user.teacher_profile) {
-      await this.teacherProfileRepository.delete(user.teacher_profile.user_id);
-    }
-
-    // Delete the user (this will cascade delete related data due to foreign keys)
-    await this.userRepository.delete(userId);
-
-    return {
-      message: 'Account deleted successfully',
-    };
-  }
-
   async deleteStudent(studentId: number): Promise<{ message: string }> {
     // Find the student user with their profile
     const user = await this.userRepository.findOne({
@@ -423,6 +418,188 @@ export class UsersService {
 
     return {
       message: 'Student deleted successfully',
+    };
+  }
+
+  async createTeacher(
+    createTeacherDTO: CreateTeacherDTO,
+  ): Promise<{ user: any; teacherProfile: TeacherProfile }> {
+    // Check if email already exists
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createTeacherDTO.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+
+    // Hash password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(
+      createTeacherDTO.password,
+      saltRounds,
+    );
+
+    // Create user
+    const user = this.userRepository.create({
+      full_name: createTeacherDTO.full_name,
+      email: createTeacherDTO.email,
+      password: hashedPassword,
+      user_type: UserType.TEACHER,
+    });
+
+    const savedUser = await this.userRepository.save(user);
+
+    // Create teacher profile
+    const teacherProfile = this.teacherProfileRepository.create({
+      user_id: savedUser.user_id,
+      teacher_id: createTeacherDTO.teacher_id,
+      dob: createTeacherDTO.dob,
+      position: createTeacherDTO.position,
+      avatar_url: createTeacherDTO.avatar_url,
+      department: createTeacherDTO.department,
+      hire_date: createTeacherDTO.hire_date,
+    });
+
+    const savedTeacherProfile =
+      await this.teacherProfileRepository.save(teacherProfile);
+
+    return {
+      user: {
+        user_id: savedUser.user_id,
+        full_name: savedUser.full_name,
+        email: savedUser.email,
+        user_type: savedUser.user_type,
+        created_at: savedUser.created_at,
+      },
+      teacherProfile: savedTeacherProfile,
+    };
+  }
+
+  async updateTeacher(
+    teacherId: number,
+    updateTeacherDTO: UpdateTeacherDTO,
+  ): Promise<{ user: any; teacherProfile: TeacherProfile }> {
+    // Find the user and their teacher profile
+    const user = await this.userRepository.findOne({
+      where: { user_id: teacherId },
+      relations: ['teacher_profile'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('Teacher not found');
+    }
+
+    if (!user.teacher_profile) {
+      throw new NotFoundException('Teacher profile not found');
+    }
+
+    // Check if email already exists (if email is being updated)
+    if (updateTeacherDTO.email && updateTeacherDTO.email !== user.email) {
+      const existingUser = await this.userRepository.findOne({
+        where: { email: updateTeacherDTO.email },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('Email already exists');
+      }
+    }
+
+    // Update user fields
+    const userUpdateData: any = {};
+    if (updateTeacherDTO.full_name)
+      userUpdateData.full_name = updateTeacherDTO.full_name;
+    if (updateTeacherDTO.email) userUpdateData.email = updateTeacherDTO.email;
+
+    if (updateTeacherDTO.password) {
+      const saltRounds = 10;
+      userUpdateData.password = await bcrypt.hash(
+        updateTeacherDTO.password,
+        saltRounds,
+      );
+    }
+
+    // Update teacher profile fields
+    const profileUpdateData: any = {};
+    if (updateTeacherDTO.teacher_id !== undefined)
+      profileUpdateData.teacher_id = updateTeacherDTO.teacher_id;
+    if (updateTeacherDTO.dob !== undefined)
+      profileUpdateData.dob = updateTeacherDTO.dob;
+    if (updateTeacherDTO.position !== undefined)
+      profileUpdateData.position = updateTeacherDTO.position;
+    if (updateTeacherDTO.avatar_url !== undefined)
+      profileUpdateData.avatar_url = updateTeacherDTO.avatar_url;
+    if (updateTeacherDTO.department !== undefined)
+      profileUpdateData.department = updateTeacherDTO.department;
+    if (updateTeacherDTO.hire_date !== undefined)
+      profileUpdateData.hire_date = updateTeacherDTO.hire_date;
+
+    // Update user if there are changes
+    if (Object.keys(userUpdateData).length > 0) {
+      await this.userRepository.update(user.user_id, userUpdateData);
+    }
+
+    // Update teacher profile if there are changes (using user_id as primary key)
+    if (Object.keys(profileUpdateData).length > 0) {
+      await this.teacherProfileRepository.update(
+        user.teacher_profile.user_id,
+        profileUpdateData,
+      );
+    }
+
+    // Fetch updated data
+    const updatedUser = await this.userRepository.findOne({
+      where: { user_id: teacherId },
+      relations: ['teacher_profile'],
+    });
+
+    if (!updatedUser || !updatedUser.teacher_profile) {
+      throw new NotFoundException('Failed to retrieve updated teacher data');
+    }
+
+    return {
+      user: {
+        user_id: updatedUser.user_id,
+        full_name: updatedUser.full_name,
+        email: updatedUser.email,
+        user_type: updatedUser.user_type,
+        created_at: updatedUser.created_at,
+      },
+      teacherProfile: updatedUser.teacher_profile,
+    };
+  }
+
+  async deleteTeacher(teacherId: number): Promise<{ message: string }> {
+    // Find the teacher user with their profile
+    const user = await this.userRepository.findOne({
+      where: { user_id: teacherId, user_type: UserType.TEACHER },
+      relations: ['teacher_profile'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('Teacher not found');
+    }
+
+    if (!user.teacher_profile) {
+      throw new NotFoundException('Teacher profile not found');
+    }
+
+    // Check if teacher has active classes
+    const activeClasses = await this.classRepository.find({
+      where: { teacher_id: teacherId },
+    });
+
+    if (activeClasses.length > 0) {
+      throw new ConflictException(
+        'Cannot delete teacher with active classes. Please reassign or delete all classes first.',
+      );
+    }
+
+    await this.teacherProfileRepository.delete(user.teacher_profile.user_id);
+    await this.userRepository.delete(teacherId);
+
+    return {
+      message: 'Teacher deleted successfully',
     };
   }
 }

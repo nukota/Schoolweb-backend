@@ -29,7 +29,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
-  @ApiOperation({ summary: 'User registration' })
+  @ApiOperation({ summary: 'User registration (Student only)' })
   @ApiBody({ type: SignupDTO })
   @ApiResponse({
     status: 201,
@@ -51,7 +51,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'User login' })
+  @ApiOperation({ summary: 'User login (Anyone)' })
   @ApiBody({ type: LoginDTO })
   @ApiResponse({
     status: 200,
@@ -95,6 +95,6 @@ export class AuthController {
     description: 'Unauthorized - Invalid or missing token',
   })
   async getMe(@CurrentUser() user): Promise<MeUserDTO> {
-    return this.authService.getMe(user.user_id);
+    return this.authService.getMe(user.user_id, user.user_role);
   }
 }

@@ -6,7 +6,6 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { TeacherProfilesService } from './teacher-profiles.service';
-import { CreateTeacherProfileDTO } from './dto/create-teacher-profile.dto';
 import { UpdateTeacherProfileDTO } from './dto/update-teacher-profile.dto';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -20,24 +19,6 @@ export class TeacherProfilesController {
   constructor(
     private readonly teacherProfilesService: TeacherProfilesService,
   ) {}
-
-  @Post()
-  @ApiOperation({ summary: 'Create teacher profile (Teacher only)' })
-  @ApiResponse({
-    status: 201,
-    description: 'Teacher profile created successfully',
-  })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  create(
-    @CurrentUser() user: any,
-    @Body() createTeacherProfileDTO: CreateTeacherProfileDTO,
-  ) {
-    return this.teacherProfilesService.create(
-      user.user_id,
-      createTeacherProfileDTO,
-    );
-  }
 
   @Get('me')
   @ApiOperation({
@@ -57,7 +38,7 @@ export class TeacherProfilesController {
   @ApiOperation({
     summary: 'Update teacher profile (Teacher only)',
     description:
-      'Teachers can update their own profile and user info (email, full_name, avatar_url, dob, position, department, hire_date)',
+      'Teachers can only update their email, date of birth (dob), and avatar URL (avatar_url)',
   })
   @ApiResponse({
     status: 200,

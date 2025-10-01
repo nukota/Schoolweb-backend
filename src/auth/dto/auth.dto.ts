@@ -1,6 +1,6 @@
 import { IsEmail, IsString, MinLength, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserType } from '../../common/enums';
+import { UserRole } from '../../common/enums';
 import { BaseResponseDTO } from '../../common/dto/common.dto';
 
 export class SignupDTO {
@@ -28,14 +28,6 @@ export class SignupDTO {
   @IsString()
   @MinLength(6)
   password: string;
-
-  @ApiProperty({
-    enum: UserType,
-    example: UserType.STUDENT,
-    description: 'Type of user account',
-  })
-  @IsEnum(UserType)
-  user_type: UserType;
 }
 
 export class LoginDTO {
@@ -69,7 +61,7 @@ export class AuthResponseDTO extends BaseResponseDTO {
       user_id: 1,
       email: 'john.doe@example.com',
       full_name: 'John Doe',
-      user_type: 'student',
+      user_role: 'student',
       has_profile: false,
     },
   })
@@ -77,20 +69,20 @@ export class AuthResponseDTO extends BaseResponseDTO {
     user_id: number;
     email: string;
     full_name: string;
-    user_type: UserType;
+    user_role: UserRole;
     has_profile: boolean;
   };
 }
 
 export class JwtPayload {
   @ApiProperty({ description: 'User ID' })
-  sub: number; // user_id
+  sub: number; // user_id or admin_id
 
   @ApiProperty({ description: 'User email' })
   email: string;
 
-  @ApiProperty({ enum: UserType, description: 'User type' })
-  user_type: UserType;
+  @ApiProperty({ enum: UserRole, description: 'User role' })
+  user_role: UserRole;
 
   @ApiProperty({ description: 'Token issued at', required: false })
   iat?: number;
@@ -110,7 +102,7 @@ export class MeUserDTO {
   full_name: string;
 
   @ApiProperty({ example: 'student' })
-  user_type: string;
+  user_role: string;
 
   @ApiProperty({ example: true })
   has_profile: boolean;

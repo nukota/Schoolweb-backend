@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsEnum,
+  Matches,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Department } from '../../common/enums';
 
@@ -15,6 +21,10 @@ export class CreateSubjectDTO {
     description: 'Unique subject code',
   })
   @IsString()
+  @Matches(/^[A-Z]{2}\d{3}$/, {
+    message:
+      'Subject code must be in format: 2 uppercase letters followed by 3 numbers (e.g., CS101)',
+  })
   subject_code: string;
 
   @ApiProperty({

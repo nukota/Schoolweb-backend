@@ -21,6 +21,8 @@ import { UsersService } from './users.service';
 import { ResetPasswordDTO } from './dto/reset-password.dto';
 import { CreateStudentDTO } from './dto/create-student.dto';
 import { UpdateStudentDTO } from './dto/update-student.dto';
+import { CreateTeacherDTO } from './dto/create-teacher.dto';
+import { UpdateTeacherDTO } from './dto/update-teacher.dto';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -30,7 +32,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Put('reset-password')
-  @ApiOperation({ summary: 'Reset password (Both)' })
+  @ApiOperation({ summary: 'Reset password (Teacher and Student)' })
   @ApiResponse({
     status: 200,
     description: 'Password reset successfully',
@@ -49,7 +51,9 @@ export class UsersController {
   }
 
   @Get('students')
-  @ApiOperation({ summary: 'Get all students with basic info (Teacher only)' })
+  @ApiOperation({
+    summary: 'Get all students with basic info (Admin and Teacher)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Students list retrieved successfully',
@@ -60,18 +64,20 @@ export class UsersController {
   }
 
   @Get('teachers')
-  @ApiOperation({ summary: 'Get all teachers list (Both)' })
+  @ApiOperation({ summary: 'Get all teachers with detailed info (Admin)' })
   @ApiResponse({
     status: 200,
     description: 'Teachers list retrieved successfully',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  getTeachers() {
-    return this.usersService.getTeachersList();
+  getTeachersPage() {
+    return this.usersService.getTeachersPage();
   }
 
   @Get('students/:id')
-  @ApiOperation({ summary: 'Get detailed student information (Teacher only)' })
+  @ApiOperation({
+    summary: 'Get detailed student information (Admin and Teacher)',
+  })
   @ApiParam({
     name: 'id',
     description: 'Student user ID',
@@ -88,7 +94,7 @@ export class UsersController {
   }
 
   @Post('create-student')
-  @ApiOperation({ summary: 'Create a new student (Teacher only)' })
+  @ApiOperation({ summary: 'Create a new student (Admin only)' })
   @ApiResponse({
     status: 201,
     description: 'Student created successfully',
@@ -101,7 +107,7 @@ export class UsersController {
   }
 
   @Put('update-student/:id')
-  @ApiOperation({ summary: 'Update student information (Teacher only)' })
+  @ApiOperation({ summary: 'Update student information (Admin only)' })
   @ApiParam({
     name: 'id',
     description: 'Student user ID',
@@ -122,19 +128,8 @@ export class UsersController {
     return this.usersService.updateStudent(+id, updateStudentDTO);
   }
 
-  @Delete('delete-account')
-  @ApiOperation({ summary: 'Delete current user account (Both)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Account deleted successfully',
-  })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  deleteCurrentUser(@CurrentUser() user: any) {
-    return this.usersService.deleteCurrentUser(user.user_id);
-  }
-
   @Delete('delete-student/:id')
-  @ApiOperation({ summary: 'Delete student (Teacher only)' })
+  @ApiOperation({ summary: 'Delete student (Admin only)' })
   @ApiParam({
     name: 'id',
     description: 'Student user ID',
@@ -148,5 +143,61 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'Student not found' })
   deleteStudent(@Param('id') id: string) {
     return this.usersService.deleteStudent(+id);
+  }
+
+  @Post('create-teacher')
+  @ApiOperation({ summary: 'Create a new teacher (Admin only)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Teacher created successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
+  createTeacher(@Body() createTeacherDTO: CreateTeacherDTO) {
+    return this.usersService.createTeacher(createTeacherDTO);
+  }
+
+  @Put('update-teacher/:id')
+  @ApiOperation({ summary: 'Update teacher information (Admin only)' })
+  @ApiParam({
+    name: 'id',
+    description: 'Teacher user ID',
+    type: 'number',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Teacher updated successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Teacher not found' })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
+  updateTeacher(
+    @Param('id') id: string,
+    @Body() updateTeacherDTO: UpdateTeacherDTO,
+  ) {
+    return this.usersService.updateTeacher(+id, updateTeacherDTO);
+  }
+
+  @Delete('delete-teacher/:id')
+  @ApiOperation({ summary: 'Delete teacher (Admin only)' })
+  @ApiParam({
+    name: 'id',
+    description: 'Teacher user ID',
+    type: 'number',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Teacher deleted successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Teacher not found' })
+  @ApiResponse({
+    status: 409,
+    description: 'Cannot delete teacher with active classes',
+  })
+  deleteTeacher(@Param('id') id: string) {
+    return this.usersService.deleteTeacher(+id);
   }
 }

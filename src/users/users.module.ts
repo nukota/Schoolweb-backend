@@ -6,6 +6,7 @@ import { User } from './entities/user.entity';
 import { StudentProfile } from '../student-profiles/entities/student-profile.entity';
 import { TeacherProfile } from '../teacher-profiles/entities/teacher-profile.entity';
 import { Enrollment } from '../enrollments/entities/enrollment.entity';
+import { Class } from '../classes/entities/class.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { AuthModule } from '../auth/auth.module';
       StudentProfile,
       TeacherProfile,
       Enrollment,
+      Class,
     ]),
     AuthModule,
   ],

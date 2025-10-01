@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DashboardController } from './dashboard.controller';
-import { DashboardService } from './dashboard.service';
+import { DashboardStudentService } from './services/dashboard-student.service';
+import { DashboardTeacherService } from './services/dashboard-teacher.service';
+import { DashboardAdminService } from './services/dashboard-admin.service';
 import { AuthModule } from 'src/auth/auth.module';
 import { User } from '../users/entities/user.entity';
 import { Enrollment } from '../enrollments/entities/enrollment.entity';
@@ -14,6 +16,10 @@ import { Subject } from '../subjects/entities/subject.entity';
     AuthModule,
   ],
   controllers: [DashboardController],
-  providers: [DashboardService],
+  providers: [
+    DashboardStudentService,
+    DashboardTeacherService,
+    DashboardAdminService,
+  ],
 })
 export class DashboardModule {}

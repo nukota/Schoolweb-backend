@@ -81,43 +81,6 @@ export class TeacherClassesDTO {
   classes: TeacherClassDTO[];
 }
 
-//DTO for Class Details Page
-export class ClassMemberDTO {
-  @ApiProperty({ example: 1, description: 'User ID' })
-  user_id: number;
-
-  @ApiProperty({ example: 'John Doe', description: 'Student full name' })
-  full_name: string;
-
-  @ApiProperty({ example: '12345', description: 'Student ID' })
-  student_id: string;
-
-  @ApiProperty({
-    example: 'https://example.com/avatar.jpg',
-    description: 'Avatar URL',
-    required: false,
-  })
-  avatar?: string;
-
-  @ApiProperty({
-    example: [8.5, 9.0, 7.5, 8.0],
-    description: 'Student scores array',
-    type: [Number],
-  })
-  scores: number[];
-}
-
-export class TeacherClassDetailsDTO extends TeacherClassDTO {
-  @ApiProperty({ example: true, description: 'Whether class is editable' })
-  is_editable: boolean;
-
-  @ApiProperty({
-    type: [ClassMemberDTO],
-    description: 'List of class members',
-  })
-  members: ClassMemberDTO[];
-}
-
 // DTO class for My Classes Page - Student View
 export class StudentClassDTO {
   @ApiProperty({ example: 1, description: 'Class ID' })
@@ -280,4 +243,61 @@ export class TeacherScheduleDTO {
     description: 'Teacher schedule items',
   })
   schedule: TeacherScheduleItemDTO[];
+}
+
+// Admin DTOs
+export class AdminClassDTO extends TeacherClassDTO {
+  @ApiProperty({
+    example: 'T001',
+    description: 'Teacher ID from teacher profile',
+  })
+  teacher_id: string;
+
+  @ApiProperty({ example: 'Dr. John Smith', description: 'Teacher full name' })
+  teacher_name: string;
+}
+
+export class AdminClassesDTO {
+  @ApiProperty({
+    type: [AdminClassDTO],
+    description: 'List of all classes for admin',
+  })
+  classes: AdminClassDTO[];
+}
+
+//DTO for Class Details Page
+export class ClassMemberDTO {
+  @ApiProperty({ example: 1, description: 'User ID' })
+  user_id: number;
+
+  @ApiProperty({ example: 'John Doe', description: 'Student full name' })
+  full_name: string;
+
+  @ApiProperty({ example: '12345', description: 'Student ID' })
+  student_id: string;
+
+  @ApiProperty({
+    example: 'https://example.com/avatar.jpg',
+    description: 'Avatar URL',
+    required: false,
+  })
+  avatar?: string;
+
+  @ApiProperty({
+    example: [8.5, 9.0, 7.5, 8.0],
+    description: 'Student scores array',
+    type: [Number],
+  })
+  scores: number[];
+}
+
+export class ClassDetailsDTO extends AdminClassDTO {
+  @ApiProperty({ example: true, description: 'Whether class is editable' })
+  is_editable: boolean;
+
+  @ApiProperty({
+    type: [ClassMemberDTO],
+    description: 'List of class members',
+  })
+  members: ClassMemberDTO[];
 }

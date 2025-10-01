@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateTeacherProfileDTO } from './dto/create-teacher-profile.dto';
 import { TeacherProfile } from './entities/teacher-profile.entity';
 import { User } from '../users/entities/user.entity';
 import { UserType } from '../common/enums';
@@ -20,34 +19,6 @@ export class TeacherProfilesService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
-
-  async create(
-    userId: number,
-    createTeacherProfileDTO: CreateTeacherProfileDTO,
-  ): Promise<TeacherProfile> {
-    // Check if user exists and is a teacher
-    const user = await this.userRepository.findOne({
-      where: { user_id: userId },
-      relations: ['teacher_profile'],
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.teacher_profile) {
-      throw new ConflictException(
-        'Teacher profile already exists for this user',
-      );
-    }
-
-    const teacherProfile = this.teacherProfileRepository.create({
-      ...createTeacherProfileDTO,
-      user_id: userId,
-    });
-
-    return await this.teacherProfileRepository.save(teacherProfile);
-  }
 
   async getProfileWithUser(userId: number): Promise<TeacherProfileDTO> {
     const user = await this.userRepository.findOne({
@@ -95,10 +66,9 @@ export class TeacherProfilesService {
       throw new NotFoundException('Teacher profile not found');
     }
 
-    const { email, full_name, ...profileData } = updateTeacherProfileDTO;
+    const { email, dob, avatar_url } = updateTeacherProfileDTO;
 
-    // Update user fields if provided
-    const userUpdateData: Partial<User> = {};
+    // Update user email if provided
     if (email && email !== user.email) {
       // Check if email already exists for another user
       const existingUser = await this.userRepository.findOne({
@@ -107,18 +77,23 @@ export class TeacherProfilesService {
       if (existingUser && existingUser.user_id !== userId) {
         throw new ConflictException('Email already exists');
       }
-      userUpdateData.email = email;
-    }
-    if (full_name) {
-      userUpdateData.full_name = full_name;
-    }
-    if (Object.keys(userUpdateData).length > 0) {
-      await this.userRepository.update(userId, userUpdateData);
+      await this.userRepository.update(userId, { email });
     }
 
-    // Update teacher profile fields
-    if (Object.keys(profileData).length > 0) {
-      await this.teacherProfileRepository.update(userId, profileData);
+    // Update teacher profile fields (only dob and avatar_url)
+    const profileUpdateData: Partial<TeacherProfile> = {};
+    if (dob !== undefined) {
+      profileUpdateData.dob = dob ? new Date(dob) : undefined;
+    }
+    if (avatar_url !== undefined) {
+      profileUpdateData.avatar_url = avatar_url;
+    }
+
+    if (Object.keys(profileUpdateData).length > 0) {
+      await this.teacherProfileRepository.update(
+        { user_id: userId },
+        profileUpdateData,
+      );
     }
 
     // Fetch updated profile

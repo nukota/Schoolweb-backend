@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import {
   RegistrationClassesDTO,
   AcademicResultsDTO,
@@ -122,7 +122,7 @@ export class EnrollmentsService {
     const enrollments = await this.enrollmentRepository.find({
       where: {
         student_id: studentId,
-        status: EnrollmentStatus.ENROLLED, // Can be expanded to include COMPLETED later
+        status: In([EnrollmentStatus.ENROLLED, EnrollmentStatus.COMPLETED]),
       },
       relations: ['class', 'class.subject', 'class.teacher'],
     });

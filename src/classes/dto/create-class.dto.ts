@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsOptional, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsDateString,
+  Matches,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateClassDTO {
@@ -7,6 +13,10 @@ export class CreateClassDTO {
     description: 'Unique class code',
   })
   @IsString()
+  @Matches(/^[A-Z]{2}\d{3}\.[A-Z]\d{2}$/, {
+    message:
+      'Class code must be in format: 2 uppercase letters, 3 numbers, dot, 1 uppercase letter, 2 numbers (e.g., CS101.A01)',
+  })
   class_code: string;
 
   @ApiProperty({
