@@ -151,6 +151,12 @@ export class UsersService {
         position: profile.position || '',
         avatar_url: profile.avatar_url,
         total_classes: totalClasses,
+        dob: profile.dob
+          ? new Date(profile.dob).toISOString().split('T')[0]
+          : undefined,
+        hire_date: profile.hire_date
+          ? new Date(profile.hire_date).toISOString().split('T')[0]
+          : undefined,
       });
     }
 

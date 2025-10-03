@@ -349,16 +349,15 @@ export class ClassesAdminService {
 
   async markClassAsComplete(
     classId: number,
-    teacherId: number,
   ): Promise<ClassManagementResponseDTO> {
-    // Verify class exists and belongs to teacher
+    // Verify class exists
     const classEntity = await this.classRepository.findOne({
-      where: { class_id: classId, teacher_id: teacherId },
+      where: { class_id: classId },
       relations: ['enrollments', 'enrollments.student'],
     });
 
     if (!classEntity) {
-      throw new NotFoundException('Class not found or not authorized');
+      throw new NotFoundException('Class not found');
     }
 
     // Check if class already has completed enrollments

@@ -72,14 +72,13 @@ export class RequestsService {
     return await this.requestRepository.save(request);
   }
 
-  async getAllRequests(teacherId: number): Promise<RequestsPageDTO> {
+  async getAllRequests(): Promise<RequestsPageDTO> {
     const requests = await this.requestRepository
       .createQueryBuilder('request')
       .leftJoinAndSelect('request.student', 'student')
       .leftJoinAndSelect('student.student_profile', 'student_profile')
       .leftJoinAndSelect('request.class', 'class')
       .leftJoinAndSelect('class.subject', 'subject')
-      .where('class.teacher_id = :teacherId', { teacherId })
       .getMany();
 
     const mappedRequests = requests.map((request) => ({

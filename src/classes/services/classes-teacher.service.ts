@@ -67,15 +67,13 @@ export class ClassesTeacherService {
     return { classes: teacherClasses };
   }
 
-  async getClassDetails(
-    classId: number,
-    teacherId: number,
-  ): Promise<ClassDetailsDTO> {
+  async getClassDetails(classId: number): Promise<ClassDetailsDTO> {
     const classEntity = await this.classRepository.findOne({
-      where: { class_id: classId, teacher_id: teacherId },
+      where: { class_id: classId },
       relations: [
         'subject',
         'teacher',
+        'teacher.teacher_profile',
         'enrollments',
         'enrollments.student',
         'enrollments.student.student_profile',
@@ -83,9 +81,7 @@ export class ClassesTeacherService {
     });
 
     if (!classEntity) {
-      throw new NotFoundException(
-        'Class not found or you are not the teacher of this class',
-      );
+      throw new NotFoundException('Class not found!');
     }
 
     const members: ClassMemberDTO[] = classEntity.enrollments
@@ -118,7 +114,8 @@ export class ClassesTeacherService {
       end_time: classEntity.end_time,
       room: classEntity.room || '',
       credits: classEntity.subject.credits,
-      teacher_id: classEntity.teacher_id.toString(),
+      teacher_id:
+        classEntity.teacher.teacher_profile?.teacher_id?.toString() || '',
       teacher_name: classEntity.teacher.full_name,
       is_editable: !hasCompletedEnrollments, // Teacher cannot edit if class has completed enrollments
       members,

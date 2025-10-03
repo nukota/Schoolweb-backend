@@ -89,7 +89,7 @@ export class ClassesController {
 
   @Get('class-details/:id')
   @ApiOperation({
-    summary: 'Get detailed class information (Teacher only)',
+    summary: 'Get detailed class information (Admin and Teacher)',
   })
   @ApiParam({ name: 'id', description: 'Class ID' })
   @ApiResponse({
@@ -98,12 +98,8 @@ export class ClassesController {
     type: ClassDetailsDTO,
   })
   @ApiResponse({ status: 404, description: 'Class not found' })
-  getClassDetails(
-    @Request() req,
-    @Param('id') id: string,
-  ): Promise<ClassDetailsDTO> {
-    const teacherId = req.user.user_id;
-    return this.classesTeacherService.getClassDetails(+id, teacherId);
+  getClassDetails(@Param('id') id: string): Promise<ClassDetailsDTO> {
+    return this.classesTeacherService.getClassDetails(+id);
   }
 
   @Get('student-classes')
@@ -272,9 +268,7 @@ export class ClassesController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   markClassAsComplete(
     @Param('id') id: string,
-    @Request() req,
   ): Promise<ClassManagementResponseDTO> {
-    const teacherId = req.user.user_id;
-    return this.classesAdminService.markClassAsComplete(+id, teacherId);
+    return this.classesAdminService.markClassAsComplete(+id);
   }
 }

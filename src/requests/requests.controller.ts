@@ -45,8 +45,7 @@ export class RequestsController {
     type: RequestsPageDTO,
   })
   getAllRequests(@CurrentUser() user): Promise<RequestsPageDTO> {
-    const teacherId = user.user_id;
-    return this.requestsService.getAllRequests(teacherId);
+    return this.requestsService.getAllRequests();
   }
 
   @Post('approve/:id')

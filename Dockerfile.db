@@ -1,0 +1,16 @@
+# Use the official PostgreSQL image as the base
+FROM postgres:15-alpine
+
+# Set environment variables for PostgreSQL
+ENV POSTGRES_DB=schoolweb_db
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=123123
+
+# Copy the database backup file to the container
+COPY schoolweb_backup.sql /docker-entrypoint-initdb.d/
+
+# Expose the PostgreSQL port
+EXPOSE 5432
+
+# The default command will run the PostgreSQL server
+# The init scripts in /docker-entrypoint-initdb.d/ will be executed automatically

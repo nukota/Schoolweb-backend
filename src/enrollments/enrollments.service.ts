@@ -60,14 +60,20 @@ export class EnrollmentsService {
       availableClasses.map(async (classEntity) => {
         let status: ClassStatus = ClassStatus.AVAILABLE;
 
-        // Check if class is full
-        const enrolledStudents = classEntity.enrollments?.length || 0;
+        // Check if class is full (only count active enrollments)
+        const enrolledStudents =
+          classEntity.enrollments?.filter(
+            (enrollment) => enrollment.status !== EnrollmentStatus.DROPPED,
+          ).length || 0;
         if (enrolledStudents >= classEntity.max_size) {
           status = ClassStatus.FULL;
         } else if (studentId) {
-          // Check if user is already enrolled
+          // Check if user is already enrolled (active enrollment)
           const existingEnrollment = classEntity.enrollments?.find(
-            (enrollment) => enrollment.student_id === studentId,
+            (enrollment) =>
+              enrollment.student_id === studentId &&
+              (enrollment.status === EnrollmentStatus.ENROLLED ||
+                enrollment.status === EnrollmentStatus.COMPLETED),
           );
 
           if (existingEnrollment) {

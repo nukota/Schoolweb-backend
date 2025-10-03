@@ -35,6 +35,20 @@ export class TeacherListItemDTO {
 
   @ApiProperty({ example: 5, description: 'Number of classes taught' })
   total_classes: number;
+
+  @ApiProperty({
+    example: '1980-05-15',
+    description: 'Date of birth (YYYY-MM-DD)',
+    required: false,
+  })
+  dob?: string;
+
+  @ApiProperty({
+    example: '2020-08-01',
+    description: 'Hire date (YYYY-MM-DD)',
+    required: false,
+  })
+  hire_date?: string;
 }
 
 export class TeachersPageDTO {
